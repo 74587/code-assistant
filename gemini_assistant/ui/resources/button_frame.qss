@@ -1,0 +1,7 @@
+            QFrame {
+                background: #101b2d;
+                border: 1px solid #18263a;
+                border-radius: 16px;
+                padding: 12px 18px;
+            }
+        

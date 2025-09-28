@@ -1,0 +1,12 @@
+            QTextBrowser {
+                background-color: transparent;
+                border: none;
+                font-family: Consolas, Segoe UI, monospace;
+            }
+            QTextBrowser pre, QTextBrowser code {
+                background-color: rgba(0, 0, 0, 0.5);
+                padding: 10px;
+                border-radius: 5px;
+                color: white;
+            }
+        

@@ -1,0 +1,25 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "E:\\work\\code\\AIworkspace\\code\\logs\\.fa4f28b2bccf05c0a1698d981824d11881b965d6-audit.json",
+    "files": [
+        {
+            "date": 1758074712088,
+            "name": "E:\\work\\code\\AIworkspace\\code\\logs\\mcp-puppeteer-2025-09-17.log",
+            "hash": "52976d387e80eb12c0231b7d1f4d895360ebe43a405266918e65f1b9c39c47f6"
+        },
+        {
+            "date": 1758682208782,
+            "name": "E:\\work\\code\\AIworkspace\\code\\logs\\mcp-puppeteer-2025-09-24.log",
+            "hash": "4b452d0144856f9610017b79f7f8d9dfd5cf536423319948139726aa68b437fe"
+        },
+        {
+            "date": 1758767116594,
+            "name": "E:\\work\\code\\AIworkspace\\code\\logs\\mcp-puppeteer-2025-09-25.log",
+            "hash": "efa11994447995431eb0fae7558466c45954b1cc5a453191d688ee5e5d348171"
+        }
+    ],
+    "hashType": "sha256"
+}
