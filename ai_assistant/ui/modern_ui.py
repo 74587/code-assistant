@@ -256,33 +256,6 @@ class Sidebar(QtWidgets.QFrame):
 
         layout.addStretch()
 
-        # 底部状态区域
-        self.status_container = QtWidgets.QWidget()
-        self.status_container.setFixedHeight(56)
-        status_layout = QtWidgets.QHBoxLayout(self.status_container)
-        status_layout.setContentsMargins(20, 0, 20, 16)
-        status_layout.setSpacing(10)
-
-        # 状态指示器
-        self.status_dot = QtWidgets.QFrame()
-        self.status_dot.setFixedSize(8, 8)
-        self.status_dot.setStyleSheet(f"""
-            background: {DesignSystem.Colors.DANGER};
-            border-radius: 4px;
-        """)
-
-        self.status_text = QtWidgets.QLabel("未启动")
-        self.status_text.setStyleSheet(f"""
-            font-size: {DesignSystem.Typography.SIZE_SM}px;
-            color: {DesignSystem.Colors.TEXT_TERTIARY};
-        """)
-
-        status_layout.addWidget(self.status_dot)
-        status_layout.addWidget(self.status_text)
-        status_layout.addStretch()
-
-        layout.addWidget(self.status_container)
-
     def _apply_style(self):
         self.setStyleSheet(f"""
             #sidebar {{
@@ -313,18 +286,6 @@ class Sidebar(QtWidgets.QFrame):
         if 0 <= index < len(self._items):
             self._on_item_clicked(index)
 
-    def update_status(self, text: str, running: bool = False):
-        self.status_text.setText(text)
-        color = DesignSystem.Colors.SUCCESS if running else DesignSystem.Colors.TEXT_TERTIARY
-        dot_color = DesignSystem.Colors.SUCCESS if running else DesignSystem.Colors.DANGER
-        self.status_text.setStyleSheet(f"""
-            font-size: {DesignSystem.Typography.SIZE_SM}px;
-            color: {color};
-        """)
-        self.status_dot.setStyleSheet(f"""
-            background: {dot_color};
-            border-radius: 4px;
-        """)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -416,7 +377,7 @@ class PageContainer(QtWidgets.QWidget):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class Card(QtWidgets.QFrame):
-    """现代化卡片组件 - 带hover效果"""
+    """现代化卡片组件 - 带阴影和hover效果"""
 
     def __init__(self, title: str = "", description: str = "", parent=None):
         super().__init__(parent)
@@ -424,6 +385,7 @@ class Card(QtWidgets.QFrame):
         self._hover = False
         self._setup_ui(title, description)
         self._apply_style()
+        self._setup_shadow()
 
     def _setup_ui(self, title: str, description: str):
         layout = QtWidgets.QVBoxLayout(self)
@@ -463,8 +425,19 @@ class Card(QtWidgets.QFrame):
         self.content_layout.setSpacing(12)
         layout.addWidget(self.content_widget)
 
+    def _setup_shadow(self):
+        """添加微妙的阴影效果"""
+        shadow = QtWidgets.QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(20)
+        shadow.setXOffset(0)
+        shadow.setYOffset(4)
+        shadow.setColor(QtGui.QColor(0, 0, 0, 40))
+        self.setGraphicsEffect(shadow)
+        self._shadow = shadow
+
     def _apply_style(self):
-        border_color = DesignSystem.Colors.BORDER_HOVER if self._hover else DesignSystem.Colors.BORDER_DEFAULT
+        # 使用更微妙的边框，减少对比度
+        border_color = "rgba(255, 255, 255, 0.06)" if not self._hover else "rgba(255, 255, 255, 0.1)"
         bg = DesignSystem.Colors.BG_ELEVATED if self._hover else DesignSystem.Colors.BG_CARD
         self.setStyleSheet(f"""
             #card {{
@@ -473,6 +446,9 @@ class Card(QtWidgets.QFrame):
                 border-radius: {DesignSystem.Radius.LG}px;
             }}
         """)
+        # 更新阴影强度
+        if hasattr(self, '_shadow'):
+            self._shadow.setColor(QtGui.QColor(0, 0, 0, 60 if self._hover else 40))
 
     def enterEvent(self, event):
         self._hover = True
@@ -662,6 +638,48 @@ class ModernCheckBox(QtWidgets.QCheckBox):
             QCheckBox::indicator:checked:hover {{
                 background: {DesignSystem.Colors.PRIMARY_HOVER};
                 border-color: {DesignSystem.Colors.PRIMARY_HOVER};
+            }}
+        """)
+
+
+class ModernRadioButton(QtWidgets.QRadioButton):
+    """现代化单选按钮 - 胶囊样式"""
+
+    def __init__(self, text: str = "", parent=None):
+        super().__init__(text, parent)
+        self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        self.setMinimumHeight(32)
+        self._apply_style()
+
+    def _apply_style(self):
+        self.setStyleSheet(f"""
+            QRadioButton {{
+                font-size: {DesignSystem.Typography.SIZE_MD}px;
+                color: {DesignSystem.Colors.TEXT_SECONDARY};
+                spacing: 0;
+                padding: 6px 16px;
+                background: transparent;
+                border: 1px solid {DesignSystem.Colors.BORDER_DEFAULT};
+                border-radius: 16px;
+            }}
+            QRadioButton:hover {{
+                background: {DesignSystem.Colors.BG_TERTIARY};
+                border-color: {DesignSystem.Colors.BORDER_HOVER};
+                color: {DesignSystem.Colors.TEXT_PRIMARY};
+            }}
+            QRadioButton:checked {{
+                background: {DesignSystem.Colors.PRIMARY};
+                border-color: {DesignSystem.Colors.PRIMARY};
+                color: #ffffff;
+                font-weight: {DesignSystem.Typography.WEIGHT_MEDIUM};
+            }}
+            QRadioButton:checked:hover {{
+                background: {DesignSystem.Colors.PRIMARY_HOVER};
+                border-color: {DesignSystem.Colors.PRIMARY_HOVER};
+            }}
+            QRadioButton::indicator {{
+                width: 0;
+                height: 0;
             }}
         """)
 
@@ -904,7 +922,7 @@ class MainWindowLayout(QtWidgets.QWidget):
         return self.page_stack.count() - 1
 
     def update_status(self, text: str, running: bool = False):
-        self.sidebar.update_status(text, running)
+        # 只在底部控制栏显示状态（移除了侧边栏状态以避免重复）
         self.control_bar.update_status(text, running)
 
 
@@ -922,6 +940,7 @@ __all__ = [
     "ModernLineEdit",
     "ModernComboBox",
     "ModernCheckBox",
+    "ModernRadioButton",
     "ModernButton",
     "IconButton",
     "ControlBar",

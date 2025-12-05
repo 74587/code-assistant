@@ -59,6 +59,7 @@ from ai_assistant.ui.modern_ui import (
     ModernLineEdit,
     ModernComboBox,
     ModernCheckBox,
+    ModernRadioButton,
     ModernButton,
     IconButton,
 )
@@ -104,6 +105,7 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         self.stop_btn = None
         self.tab_widget = None
         self.log_viewer = None
+        self.provider_field_widgets = {}
         self.setWindowTitle(f"AI 截图助手 v{APP_VERSION} - 配置")
         # 从配置文件读取窗口尺寸
         min_width = self.config_manager.get("window_min_width", CONFIG_WINDOW_MIN_WIDTH)
@@ -220,36 +222,18 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         # ─────────────────────────────────────────────────────────────
         provider_card = Card("AI 服务商", "选择默认服务商并配置认证信息")
 
-        # 服务商选择
+        # 服务商选择 - 使用胶囊样式单选按钮
         provider_select = QtWidgets.QWidget()
         provider_layout = QtWidgets.QHBoxLayout(provider_select)
         provider_layout.setContentsMargins(0, 0, 0, 0)
-        provider_layout.setSpacing(12)
+        provider_layout.setSpacing(8)
 
         current_provider = self.config_manager.get("provider", DEFAULT_PROVIDER)
         self.provider_radio_group = QtWidgets.QButtonGroup()
         self.provider_radios = {}
 
         for provider in AVAILABLE_PROVIDERS:
-            radio = QtWidgets.QRadioButton(provider)
-            radio.setMinimumHeight(32)
-            radio.setStyleSheet(f"""
-                QRadioButton {{
-                    font-size: {DesignSystem.Typography.SIZE_MD}px;
-                    color: {DesignSystem.Colors.TEXT_PRIMARY};
-                    spacing: 8px;
-                }}
-                QRadioButton::indicator {{
-                    width: 18px;
-                    height: 18px;
-                    border-radius: 9px;
-                    border: 2px solid {DesignSystem.Colors.BORDER_HOVER};
-                }}
-                QRadioButton::indicator:checked {{
-                    background: {DesignSystem.Colors.PRIMARY};
-                    border-color: {DesignSystem.Colors.PRIMARY};
-                }}
-            """)
+            radio = ModernRadioButton(provider)
             self.provider_radios[provider] = radio
             self.provider_radio_group.addButton(radio)
             provider_layout.addWidget(radio)
@@ -381,19 +365,8 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         """构建现代化的服务商配置面板"""
         panel = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(panel)
-        layout.setContentsMargins(0, 16, 0, 0)
+        layout.setContentsMargins(0, 12, 0, 0)
         layout.setSpacing(12)
-
-        # 面板标题
-        title_text = "🟢 Gemini 配置" if provider == "Gemini" else "🔵 GPT 配置"
-        title = QtWidgets.QLabel(title_text)
-        title.setStyleSheet(f"""
-            font-size: {DesignSystem.Typography.SIZE_MD}px;
-            font-weight: {DesignSystem.Typography.WEIGHT_SEMIBOLD};
-            color: {DesignSystem.Colors.TEXT_SECONDARY};
-            padding-bottom: 8px;
-        """)
-        layout.addWidget(title)
 
         if provider == "Gemini":
             # Gemini API Key
