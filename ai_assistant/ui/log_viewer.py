@@ -93,7 +93,7 @@ class LogViewerWidget(QtWidgets.QWidget):
 
         # 日志文本框
         self.log_text = ModernLogTextEdit()
-        self.log_text.setMinimumHeight(350)
+        self.log_text.setMinimumHeight(280)  # 减少高度
         self.log_text.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding,
             QtWidgets.QSizePolicy.Policy.Expanding
@@ -113,12 +113,12 @@ class LogViewerWidget(QtWidgets.QWidget):
         button_layout.addStretch()
 
         self.copy_btn = ModernButton("复制日志", "secondary")
-        self.copy_btn.setMinimumWidth(100)
+        self.copy_btn.setMinimumWidth(80)
         self.copy_btn.clicked.connect(self._copy_logs_to_clipboard)
         button_layout.addWidget(self.copy_btn)
 
         self.clear_btn = ModernButton("清空日志", "ghost")
-        self.clear_btn.setMinimumWidth(100)
+        self.clear_btn.setMinimumWidth(80)
         self.clear_btn.clicked.connect(self._clear_logs_via_ui)
         button_layout.addWidget(self.clear_btn)
 

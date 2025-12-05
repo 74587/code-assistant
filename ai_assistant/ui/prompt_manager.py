@@ -110,7 +110,7 @@ class PromptManagerWidget(QtWidgets.QWidget):
 
         # 内容
         self.prompt_content_edit = ModernTextEdit("请输入详细的提示词内容...")
-        self.prompt_content_edit.setMinimumHeight(180)
+        self.prompt_content_edit.setMinimumHeight(140)  # 减少高度
         self.prompt_content_edit.textChanged.connect(self.update_char_count)
         edit_card.add_widget(FormRow("提示词内容", self.prompt_content_edit))
 
@@ -135,22 +135,22 @@ class PromptManagerWidget(QtWidgets.QWidget):
         button_layout.setSpacing(12)
 
         self.add_btn = ModernButton("添加", "success")
-        self.add_btn.setMinimumWidth(80)
+        self.add_btn.setMinimumWidth(70)
         self.add_btn.clicked.connect(self.add_prompt)
         button_layout.addWidget(self.add_btn)
 
         self.update_btn = ModernButton("更新", "primary")
-        self.update_btn.setMinimumWidth(80)
+        self.update_btn.setMinimumWidth(70)
         self.update_btn.clicked.connect(self.update_prompt)
         button_layout.addWidget(self.update_btn)
 
         self.delete_btn = ModernButton("删除", "danger")
-        self.delete_btn.setMinimumWidth(80)
+        self.delete_btn.setMinimumWidth(70)
         self.delete_btn.clicked.connect(self.delete_prompt)
         button_layout.addWidget(self.delete_btn)
 
         self.clear_btn = ModernButton("清空", "secondary")
-        self.clear_btn.setMinimumWidth(80)
+        self.clear_btn.setMinimumWidth(70)
         self.clear_btn.clicked.connect(self.clear_prompt_fields)
         button_layout.addWidget(self.clear_btn)
 

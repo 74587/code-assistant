@@ -111,10 +111,10 @@ class SidebarItem(QtWidgets.QPushButton):
         super().__init__(parent)
         self._icon = icon
         self._text = text
-        self.setText(f"  {icon}   {text}")
+        self.setText(f" {icon}  {text}")
         self.setCheckable(True)
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        self.setFixedHeight(48)
+        self.setFixedHeight(40)  # 减少高度
 
         # 动画
         self._bg_opacity = 0.0
@@ -190,7 +190,7 @@ class Sidebar(QtWidgets.QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedWidth(200)
+        self.setFixedWidth(180)  # 减少侧边栏宽度
         self.setObjectName("sidebar")
         self._items: List[SidebarItem] = []
         self._button_group = QtWidgets.QButtonGroup(self)
@@ -206,32 +206,32 @@ class Sidebar(QtWidgets.QFrame):
 
         # Logo 区域
         self.logo_container = QtWidgets.QWidget()
-        self.logo_container.setFixedHeight(64)
+        self.logo_container.setFixedHeight(56)  # 减少高度
         logo_layout = QtWidgets.QHBoxLayout(self.logo_container)
-        logo_layout.setContentsMargins(20, 0, 20, 0)
-        logo_layout.setSpacing(12)
+        logo_layout.setContentsMargins(16, 0, 16, 0)
+        logo_layout.setSpacing(10)
 
         # Logo 图标
         logo_icon = QtWidgets.QLabel("🤖")
-        logo_icon.setStyleSheet(f"font-size: 24px;")
+        logo_icon.setStyleSheet(f"font-size: 20px;")
         logo_layout.addWidget(logo_icon)
 
         # 标题
         title_container = QtWidgets.QWidget()
         title_layout = QtWidgets.QVBoxLayout(title_container)
         title_layout.setContentsMargins(0, 0, 0, 0)
-        title_layout.setSpacing(2)
+        title_layout.setSpacing(0)
 
         self.logo_label = QtWidgets.QLabel("AI Assistant")
         self.logo_label.setStyleSheet(f"""
-            font-size: {DesignSystem.Typography.SIZE_LG}px;
+            font-size: {DesignSystem.Typography.SIZE_MD}px;
             font-weight: {DesignSystem.Typography.WEIGHT_BOLD};
             color: {DesignSystem.Colors.TEXT_PRIMARY};
         """)
 
         self.version_label = QtWidgets.QLabel("v2.0.0")
         self.version_label.setStyleSheet(f"""
-            font-size: {DesignSystem.Typography.SIZE_XS}px;
+            font-size: 10px;
             color: {DesignSystem.Colors.TEXT_TERTIARY};
         """)
 
@@ -302,19 +302,19 @@ class PageContainer(QtWidgets.QWidget):
 
     def _setup_ui(self, title: str, subtitle: str):
         layout = QtWidgets.QVBoxLayout(self)
-        layout.setContentsMargins(32, 24, 32, 24)
+        layout.setContentsMargins(24, 16, 24, 16)  # 减少边距
         layout.setSpacing(0)
 
         # 页面标题区域
         if title:
             header = QtWidgets.QWidget()
             header_layout = QtWidgets.QVBoxLayout(header)
-            header_layout.setContentsMargins(0, 0, 0, 20)
-            header_layout.setSpacing(4)
+            header_layout.setContentsMargins(0, 0, 0, 12)  # 减少标题底部间距
+            header_layout.setSpacing(2)
 
             title_label = QtWidgets.QLabel(title)
             title_label.setStyleSheet(f"""
-                font-size: {DesignSystem.Typography.SIZE_XXL}px;
+                font-size: {DesignSystem.Typography.SIZE_XL}px;
                 font-weight: {DesignSystem.Typography.WEIGHT_BOLD};
                 color: {DesignSystem.Colors.TEXT_PRIMARY};
             """)
@@ -323,7 +323,7 @@ class PageContainer(QtWidgets.QWidget):
             if subtitle:
                 subtitle_label = QtWidgets.QLabel(subtitle)
                 subtitle_label.setStyleSheet(f"""
-                    font-size: {DesignSystem.Typography.SIZE_SM}px;
+                    font-size: {DesignSystem.Typography.SIZE_XS}px;
                     color: {DesignSystem.Colors.TEXT_TERTIARY};
                 """)
                 header_layout.addWidget(subtitle_label)
@@ -360,8 +360,8 @@ class PageContainer(QtWidgets.QWidget):
 
         self.content_widget = QtWidgets.QWidget()
         self.content_layout = QtWidgets.QVBoxLayout(self.content_widget)
-        self.content_layout.setContentsMargins(0, 0, 12, 0)
-        self.content_layout.setSpacing(16)
+        self.content_layout.setContentsMargins(0, 0, 8, 0)
+        self.content_layout.setSpacing(12)  # 减少卡片间距
 
         scroll.setWidget(self.content_widget)
         layout.addWidget(scroll, 1)
@@ -390,19 +390,19 @@ class Card(QtWidgets.QFrame):
 
     def _setup_ui(self, title: str, description: str):
         layout = QtWidgets.QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+        layout.setContentsMargins(16, 14, 16, 14)  # 减少卡片内边距
+        layout.setSpacing(10)  # 减少卡片内部间距
 
         # 标题区域
         if title:
             header = QtWidgets.QWidget()
             header_layout = QtWidgets.QVBoxLayout(header)
             header_layout.setContentsMargins(0, 0, 0, 0)
-            header_layout.setSpacing(4)
+            header_layout.setSpacing(2)
 
             title_label = QtWidgets.QLabel(title)
             title_label.setStyleSheet(f"""
-                font-size: {DesignSystem.Typography.SIZE_LG}px;
+                font-size: {DesignSystem.Typography.SIZE_MD}px;
                 font-weight: {DesignSystem.Typography.WEIGHT_SEMIBOLD};
                 color: {DesignSystem.Colors.TEXT_PRIMARY};
             """)
@@ -412,7 +412,7 @@ class Card(QtWidgets.QFrame):
                 desc_label = QtWidgets.QLabel(description)
                 desc_label.setWordWrap(True)
                 desc_label.setStyleSheet(f"""
-                    font-size: {DesignSystem.Typography.SIZE_SM}px;
+                    font-size: {DesignSystem.Typography.SIZE_XS}px;
                     color: {DesignSystem.Colors.TEXT_TERTIARY};
                 """)
                 header_layout.addWidget(desc_label)
@@ -423,7 +423,7 @@ class Card(QtWidgets.QFrame):
         self.content_widget = QtWidgets.QWidget()
         self.content_layout = QtWidgets.QVBoxLayout(self.content_widget)
         self.content_layout.setContentsMargins(0, 0, 0, 0)
-        self.content_layout.setSpacing(12)
+        self.content_layout.setSpacing(8)  # 减少内容间距
         layout.addWidget(self.content_widget)
 
     def _setup_shadow(self):
@@ -479,16 +479,16 @@ class FormRow(QtWidgets.QWidget):
     def _setup_ui(self, label: str, widget: QtWidgets.QWidget, helper: str):
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
+        layout.setSpacing(12)  # 减少标签和内容间距
 
         # 标签 - 宽度增加到100以适应中文
         label_widget = QtWidgets.QLabel(label)
-        label_widget.setFixedWidth(100)
+        label_widget.setFixedWidth(90)  # 减小标签宽度
         label_widget.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTop)
         label_widget.setStyleSheet(f"""
-            font-size: {DesignSystem.Typography.SIZE_MD}px;
+            font-size: {DesignSystem.Typography.SIZE_SM}px;
             color: {DesignSystem.Colors.TEXT_SECONDARY};
-            padding-top: 8px;
+            padding-top: 6px;
         """)
         layout.addWidget(label_widget)
 
@@ -517,7 +517,7 @@ class ModernLineEdit(QtWidgets.QLineEdit):
     def __init__(self, placeholder: str = "", parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
-        self.setMinimumHeight(36)
+        self.setMinimumHeight(32)  # 减少高度
         self._focused = False
         self._apply_style()
 
@@ -556,7 +556,7 @@ class ModernComboBox(QtWidgets.QComboBox):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumHeight(36)
+        self.setMinimumHeight(32)  # 减少高度
         self._apply_style()
 
     def _apply_style(self):
@@ -702,7 +702,7 @@ class ModernButton(QtWidgets.QPushButton):
         super().__init__(text, parent)
         self.variant = variant
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
-        self.setMinimumHeight(36)
+        self.setMinimumHeight(32)  # 减少高度
         self._pressed = False
         self._apply_style()
 
@@ -758,8 +758,8 @@ class ModernButton(QtWidgets.QPushButton):
                 background: {bg};
                 border: none;
                 border-radius: {DesignSystem.Radius.SM}px;
-                padding: 0 20px;
-                font-size: {DesignSystem.Typography.SIZE_MD}px;
+                padding: 0 16px;
+                font-size: {DesignSystem.Typography.SIZE_SM}px;
                 font-weight: {DesignSystem.Typography.WEIGHT_MEDIUM};
                 color: {v["text"]};
             }}
@@ -810,20 +810,20 @@ class ControlBar(QtWidgets.QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(64)
+        self.setFixedHeight(52)  # 减少高度
         self._setup_ui()
         self._apply_style()
 
     def _setup_ui(self):
         layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(24, 0, 24, 0)
-        layout.setSpacing(16)
+        layout.setContentsMargins(20, 0, 20, 0)
+        layout.setSpacing(12)
 
         # 左侧状态
         self.status_container = QtWidgets.QWidget()
         status_layout = QtWidgets.QHBoxLayout(self.status_container)
         status_layout.setContentsMargins(0, 0, 0, 0)
-        status_layout.setSpacing(10)
+        status_layout.setSpacing(8)
 
         self.status_indicator = QtWidgets.QFrame()
         self.status_indicator.setFixedSize(8, 8)
@@ -834,7 +834,7 @@ class ControlBar(QtWidgets.QFrame):
 
         self.status_label = QtWidgets.QLabel("未启动")
         self.status_label.setStyleSheet(f"""
-            font-size: {DesignSystem.Typography.SIZE_MD}px;
+            font-size: {DesignSystem.Typography.SIZE_SM}px;
             color: {DesignSystem.Colors.TEXT_SECONDARY};
         """)
 
