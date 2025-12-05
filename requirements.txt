@@ -1,0 +1,21 @@
+# GUI Framework
+PyQt6>=6.4.0
+
+# AI Services
+google-genai>=0.3.0
+openai>=1.0.0
+Pillow>=9.0.0
+
+# Screen Capture & Input
+mss>=6.0.0
+pynput>=1.7.0
+pyperclip>=1.8.0
+
+# Markdown Rendering
+markdown-it-py>=2.0.0
+
+# Process Management
+psutil>=5.9.0
+
+# Optional: Fluent UI Theme (uncomment if needed)
+# PyQt-Fluent-Widgets>=1.0.0

@@ -1,19 +1,88 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
-*.class
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Virtual environment
 .venv/
 venv/
 ENV/
+env/
 
 # IDE
 .idea/
 .vscode/
 *.code-workspace
+*.swp
+*.swo
 
-# Misc
+# OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
+# Configuration files with sensitive data
+model_config.json
+gemini_config.json
+*.config.json
+!model_config.example.json
+
+# Backup files
+*.backup
+*.bak
+*.backup.py
+*_backup*.py
+*_backup*.json
+config_backups/
+
+# Logs
+logs/
+*.log
+
+# Test files and debug
+debug_*.py
+check_*.py
+*_test_*.py
+code_test*.py
+
+# Temporary files
+*.tmp
+*.temp
+nul
+
+# Screenshots and images (keep examples)
+*.png
+*.jpg
+*.jpeg
+!assets/*.png
+!docs/*.png
+
+# Spec workflow (if not needed)
+.spec-workflow/
+
+# Claude Code
+.claude/
+CLAUDE.md
+AGENTS.md
+OPTIMIZATION_PLAN.md
+
+# Original/recovered files
+*_original*.py
+*_recovered*.py
