@@ -22,7 +22,7 @@ FORM_HORIZONTAL_SPACING = 18
 FORM_VERTICAL_SPACING = 18
 
 TOP_BAR_MIN_HEIGHT = 72
-STATUS_BAR_HEIGHT = 48
+STATUS_BAR_HEIGHT = 56
 
 HELPER_LABEL_STYLE = (
     "color: rgba(226, 232, 240, 0.72);"
@@ -244,7 +244,7 @@ class FluentStatusBar(QtWidgets.QFrame):
         )
 
         layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(20, 10, 20, 10)
+        layout.setContentsMargins(20, 12, 20, 12)
         layout.setSpacing(12)
 
         self._indicator = QtWidgets.QFrame()
