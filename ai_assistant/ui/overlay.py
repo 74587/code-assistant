@@ -86,19 +86,34 @@ class ModernOverlay(QtWidgets.QWidget):
         self._apply_screen_capture_protection()
 
     def _apply_screen_capture_protection(self):
-        """应用截屏保护 - 防止被截屏或录屏工具捕获"""
+        """应用或移除截屏保护 - 根据配置动态控制"""
         try:
-            # Windows API: SetWindowDisplayAffinity
-            # WDA_EXCLUDEFROMCAPTURE = 0x11
-            # 这会使窗口在截图和录屏中显示为黑色
             hwnd = int(self.winId())
-            WDA_EXCLUDEFROMCAPTURE = 0x11
-            result = ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)
-            if result:
-                pass  # 成功应用保护
-        except Exception:
+            # WDA_EXCLUDEFROMCAPTURE = 0x11 启用保护
+            # WDA_NONE = 0x00 移除保护
+            enable_protection = self.config_manager.get("enable_capture_protection", True)
+            affinity_value = 0x11 if enable_protection else 0x00
+            
+            # 调用 Windows API
+            result = ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, affinity_value)
+            if result == 0:
+                print(f"SetWindowDisplayAffinity failed for HWND {hwnd}")
+            else:
+                print(f"SetWindowDisplayAffinity success: {'Protected' if enable_protection else 'Unprotected'} (Affinity: {affinity_value})")
+                
+        except Exception as e:
+            print(f"Failed to set window display affinity: {e}")
             # 非 Windows 平台或 API 调用失败时静默处理
             pass
+
+    def update_capture_protection(self):
+        """更新截屏保护状态 - 供外部调用"""
+        self._apply_screen_capture_protection()
+        # 强制刷新窗口以确保设置生效
+        self.update()
+        self.repaint()
+        # 在某些系统上可能需要处理事件循环
+        QtWidgets.QApplication.processEvents()
 
     def _build_ui(self):
         """构建 UI"""
@@ -451,6 +466,16 @@ def hello_world():
         if not self.isVisible():
             self._fade_in()
 
+    def show_overlay(self):
+        """显示浮窗（兼容性方法）"""
+        # 每次显示前重新应用防截屏保护设置
+        self._apply_screen_capture_protection()
+        self.show_at_position()
+
+    def hide_overlay(self):
+        """隐藏浮窗（兼容性方法）"""
+        self._fade_out()
+
     # ─────────────────────────────────────────────────────────────
     # 动画方法
     # ─────────────────────────────────────────────────────────────
@@ -536,16 +561,34 @@ def hello_world():
     # ─────────────────────────────────────────────────────────────
 
     def scroll_up(self):
-        sb = self.browser.verticalScrollBar()
-        sb.setValue(sb.value() - sb.singleStep() * 3)
+        """向上滚动内容"""
+        try:
+            if self.browser:
+                sb = self.browser.verticalScrollBar()
+                if sb:
+                    sb.setValue(sb.value() - sb.singleStep() * 3)
+        except Exception:
+            pass  # 静默处理滚动错误
 
     def scroll_down(self):
-        sb = self.browser.verticalScrollBar()
-        sb.setValue(sb.value() + sb.singleStep() * 3)
+        """向下滚动内容"""
+        try:
+            if self.browser:
+                sb = self.browser.verticalScrollBar()
+                if sb:
+                    sb.setValue(sb.value() + sb.singleStep() * 3)
+        except Exception:
+            pass  # 静默处理滚动错误
 
     def _scroll_to_bottom(self):
-        sb = self.browser.verticalScrollBar()
-        sb.setValue(sb.maximum())
+        """滚动到底部"""
+        try:
+            if self.browser:
+                sb = self.browser.verticalScrollBar()
+                if sb:
+                    sb.setValue(sb.maximum())
+        except Exception:
+            pass  # 静默处理滚动错误
 
     # ─────────────────────────────────────────────────────────────
     # 加载动画

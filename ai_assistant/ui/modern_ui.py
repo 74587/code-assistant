@@ -24,12 +24,12 @@ class DesignSystem:
         BG_CARD = "#282828"          # 卡片背景
         BG_ELEVATED = "#353535"      # 悬浮/hover背景
         BG_HOVER = "#3d3d3d"         # hover状态
-        BG_INPUT = "#323232"         # 输入框统一背景
+        BG_INPUT = "#232323"         # 输入框背景 - 稍深于卡片，提供视觉区分
 
-        # 边框色
-        BORDER_DEFAULT = "rgba(255, 255, 255, 0.08)"
-        BORDER_HOVER = "rgba(255, 255, 255, 0.15)"
-        BORDER_FOCUS = "rgba(7, 193, 96, 0.6)"
+        # 边框色 - 增加可见度
+        BORDER_DEFAULT = "rgba(255, 255, 255, 0.12)"   # 稍亮的边框
+        BORDER_HOVER = "rgba(255, 255, 255, 0.20)"
+        BORDER_FOCUS = "rgba(7, 193, 96, 0.7)"
 
         # 品牌色 - 微信绿色风格
         PRIMARY = "#07c160"          # 主色调 - 微信绿
@@ -556,17 +556,17 @@ class ModernComboBox(QtWidgets.QComboBox):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumHeight(32)  # 减少高度
+        self.setMinimumHeight(32)
         self._apply_style()
 
     def _apply_style(self):
+        # 使用unicode字符作为下拉箭头，避免CSS border三角形在Windows上的问题
         self.setStyleSheet(f"""
             QComboBox {{
                 background: {DesignSystem.Colors.BG_INPUT};
                 border: 1px solid {DesignSystem.Colors.BORDER_DEFAULT};
                 border-radius: {DesignSystem.Radius.SM}px;
-                padding: 0 12px;
-                padding-right: 30px;
+                padding: 0 28px 0 12px;
                 font-size: {DesignSystem.Typography.SIZE_MD}px;
                 color: {DesignSystem.Colors.TEXT_PRIMARY};
             }}
@@ -580,17 +580,15 @@ class ModernComboBox(QtWidgets.QComboBox):
             QComboBox::drop-down {{
                 subcontrol-origin: padding;
                 subcontrol-position: center right;
-                width: 24px;
+                width: 28px;
                 border: none;
                 background: transparent;
             }}
             QComboBox::down-arrow {{
                 image: none;
-                width: 0;
-                height: 0;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 6px solid {DesignSystem.Colors.TEXT_SECONDARY};
+                border: none;
+                width: 8px;
+                height: 8px;
             }}
             QComboBox QAbstractItemView {{
                 background: {DesignSystem.Colors.BG_ELEVATED};
@@ -610,6 +608,30 @@ class ModernComboBox(QtWidgets.QComboBox):
                 background: {DesignSystem.Colors.BG_HOVER};
             }}
         """)
+
+    def paintEvent(self, event):
+        """自定义绘制下拉箭头"""
+        super().paintEvent(event)
+        # 绘制下拉箭头 ▼
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+
+        # 箭头位置
+        arrow_x = self.width() - 18
+        arrow_y = self.height() // 2
+
+        # 绘制三角形箭头
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
+        painter.setBrush(QtGui.QColor(DesignSystem.Colors.TEXT_SECONDARY))
+
+        # 三角形顶点
+        points = [
+            QtCore.QPointF(arrow_x - 4, arrow_y - 2),
+            QtCore.QPointF(arrow_x + 4, arrow_y - 2),
+            QtCore.QPointF(arrow_x, arrow_y + 3),
+        ]
+        painter.drawPolygon(points)
+        painter.end()
 
 
 class ModernCheckBox(QtWidgets.QCheckBox):
@@ -650,7 +672,7 @@ class ModernCheckBox(QtWidgets.QCheckBox):
 
 
 class ModernRadioButton(QtWidgets.QRadioButton):
-    """现代化单选按钮 - 胶囊样式"""
+    """现代化单选按钮 - 胶囊样式（完全自绘，无原生indicator）"""
 
     def __init__(self, text: str = "", parent=None):
         super().__init__(text, parent)
@@ -658,39 +680,57 @@ class ModernRadioButton(QtWidgets.QRadioButton):
         self.setMinimumHeight(28)
         self.setMinimumWidth(70)
         self._apply_style()
+        # 连接状态变化信号以更新样式
+        self.toggled.connect(self._apply_style)
 
     def _apply_style(self):
-        self.setStyleSheet(f"""
-            QRadioButton {{
-                font-size: {DesignSystem.Typography.SIZE_SM}px;
-                color: {DesignSystem.Colors.TEXT_SECONDARY};
-                padding: 4px 14px;
-                padding-left: 14px;
-                background: transparent;
-                border: 1px solid {DesignSystem.Colors.BORDER_DEFAULT};
-                border-radius: 14px;
-            }}
-            QRadioButton::indicator {{
-                width: 0px;
-                height: 0px;
-                margin: 0px;
-            }}
-            QRadioButton:hover {{
-                background: {DesignSystem.Colors.BG_TERTIARY};
-                border-color: {DesignSystem.Colors.BORDER_HOVER};
-                color: {DesignSystem.Colors.TEXT_PRIMARY};
-            }}
-            QRadioButton:checked {{
-                background: {DesignSystem.Colors.PRIMARY};
-                border-color: {DesignSystem.Colors.PRIMARY};
-                color: #ffffff;
-                font-weight: {DesignSystem.Typography.WEIGHT_MEDIUM};
-            }}
-            QRadioButton:checked:hover {{
-                background: {DesignSystem.Colors.PRIMARY_HOVER};
-                border-color: {DesignSystem.Colors.PRIMARY_HOVER};
-            }}
-        """)
+        # 根据选中状态设置不同样式
+        if self.isChecked():
+            self.setStyleSheet(f"""
+                QRadioButton {{
+                    font-size: {DesignSystem.Typography.SIZE_SM}px;
+                    color: #ffffff;
+                    padding: 4px 14px;
+                    background: {DesignSystem.Colors.PRIMARY};
+                    border: 1px solid {DesignSystem.Colors.PRIMARY};
+                    border-radius: 14px;
+                    font-weight: {DesignSystem.Typography.WEIGHT_MEDIUM};
+                }}
+                QRadioButton::indicator {{
+                    width: 0;
+                    height: 0;
+                    border: none;
+                    background: none;
+                    image: none;
+                }}
+                QRadioButton:hover {{
+                    background: {DesignSystem.Colors.PRIMARY_HOVER};
+                    border-color: {DesignSystem.Colors.PRIMARY_HOVER};
+                }}
+            """)
+        else:
+            self.setStyleSheet(f"""
+                QRadioButton {{
+                    font-size: {DesignSystem.Typography.SIZE_SM}px;
+                    color: {DesignSystem.Colors.TEXT_SECONDARY};
+                    padding: 4px 14px;
+                    background: transparent;
+                    border: 1px solid {DesignSystem.Colors.BORDER_DEFAULT};
+                    border-radius: 14px;
+                }}
+                QRadioButton::indicator {{
+                    width: 0;
+                    height: 0;
+                    border: none;
+                    background: none;
+                    image: none;
+                }}
+                QRadioButton:hover {{
+                    background: {DesignSystem.Colors.BG_TERTIARY};
+                    border-color: {DesignSystem.Colors.BORDER_HOVER};
+                    color: {DesignSystem.Colors.TEXT_PRIMARY};
+                }}
+            """)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -936,6 +976,207 @@ class MainWindowLayout(QtWidgets.QWidget):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# 受保护的消息对话框 - 防截屏
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class ProtectedMessageBox(QtWidgets.QDialog):
+    """
+    受保护的消息对话框 - 防止被截屏/录屏捕获
+    用于替代 QMessageBox，确保敏感信息不会泄露
+    """
+
+    # 消息类型
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    QUESTION = "question"
+
+    def __init__(self, parent=None, msg_type: str = INFO):
+        super().__init__(parent)
+        self.msg_type = msg_type
+        self._result = False
+        self._setup_window()
+        self._setup_ui()
+
+    def _setup_window(self):
+        """设置窗口属性"""
+        self.setWindowFlags(
+            QtCore.Qt.WindowType.Dialog |
+            QtCore.Qt.WindowType.FramelessWindowHint |
+            QtCore.Qt.WindowType.WindowStaysOnTopHint
+        )
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setModal(True)
+        self.setMinimumWidth(360)
+        self.setMaximumWidth(480)
+
+        # 应用截屏保护
+        self._apply_capture_protection()
+
+    def _apply_capture_protection(self):
+        """应用防截屏保护"""
+        try:
+            import ctypes
+            hwnd = int(self.winId())
+            WDA_EXCLUDEFROMCAPTURE = 0x11
+            ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)
+        except Exception:
+            pass  # 非Windows平台静默处理
+
+    def _setup_ui(self):
+        """构建UI"""
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # 主容器 - 带圆角和阴影
+        container = QtWidgets.QFrame()
+        container.setObjectName("msgContainer")
+        container.setStyleSheet(f"""
+            #msgContainer {{
+                background: {DesignSystem.Colors.BG_CARD};
+                border: 1px solid {DesignSystem.Colors.BORDER_DEFAULT};
+                border-radius: {DesignSystem.Radius.LG}px;
+            }}
+        """)
+
+        # 添加阴影
+        shadow = QtWidgets.QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(30)
+        shadow.setXOffset(0)
+        shadow.setYOffset(8)
+        shadow.setColor(QtGui.QColor(0, 0, 0, 80))
+        container.setGraphicsEffect(shadow)
+
+        container_layout = QtWidgets.QVBoxLayout(container)
+        container_layout.setContentsMargins(24, 20, 24, 20)
+        container_layout.setSpacing(16)
+
+        # 图标和标题行
+        header = QtWidgets.QHBoxLayout()
+        header.setSpacing(12)
+
+        # 图标
+        icon_label = QtWidgets.QLabel()
+        icon_label.setFixedSize(24, 24)
+        icon_colors = {
+            self.INFO: DesignSystem.Colors.ACCENT,
+            self.WARNING: DesignSystem.Colors.WARNING,
+            self.ERROR: DesignSystem.Colors.DANGER,
+            self.QUESTION: DesignSystem.Colors.PRIMARY,
+        }
+        icon_texts = {
+            self.INFO: "ℹ",
+            self.WARNING: "⚠",
+            self.ERROR: "✕",
+            self.QUESTION: "?",
+        }
+        icon_label.setText(icon_texts.get(self.msg_type, "ℹ"))
+        icon_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        icon_label.setStyleSheet(f"""
+            font-size: 18px;
+            color: {icon_colors.get(self.msg_type, DesignSystem.Colors.ACCENT)};
+        """)
+        header.addWidget(icon_label)
+
+        # 标题
+        self.title_label = QtWidgets.QLabel()
+        self.title_label.setStyleSheet(f"""
+            font-size: {DesignSystem.Typography.SIZE_LG}px;
+            font-weight: {DesignSystem.Typography.WEIGHT_SEMIBOLD};
+            color: {DesignSystem.Colors.TEXT_PRIMARY};
+        """)
+        header.addWidget(self.title_label, 1)
+
+        container_layout.addLayout(header)
+
+        # 消息内容
+        self.message_label = QtWidgets.QLabel()
+        self.message_label.setWordWrap(True)
+        self.message_label.setStyleSheet(f"""
+            font-size: {DesignSystem.Typography.SIZE_MD}px;
+            color: {DesignSystem.Colors.TEXT_SECONDARY};
+            line-height: 1.5;
+        """)
+        container_layout.addWidget(self.message_label)
+
+        # 按钮区域
+        self.button_layout = QtWidgets.QHBoxLayout()
+        self.button_layout.setSpacing(12)
+        self.button_layout.addStretch()
+        container_layout.addLayout(self.button_layout)
+
+        layout.addWidget(container)
+
+    def setWindowTitle(self, title: str):
+        """设置标题"""
+        self.title_label.setText(title)
+
+    def setText(self, text: str):
+        """设置消息内容"""
+        self.message_label.setText(text)
+
+    def addButton(self, text: str, variant: str = "secondary", is_accept: bool = False):
+        """添加按钮"""
+        btn = ModernButton(text, variant)
+        btn.setMinimumWidth(80)
+        if is_accept:
+            btn.clicked.connect(self.accept)
+        else:
+            btn.clicked.connect(self.reject)
+        self.button_layout.addWidget(btn)
+        return btn
+
+    def showEvent(self, event):
+        """显示时应用保护并居中"""
+        super().showEvent(event)
+        # 再次应用保护（确保生效）
+        self._apply_capture_protection()
+        # 居中显示
+        if self.parent():
+            parent_geo = self.parent().geometry()
+            x = parent_geo.x() + (parent_geo.width() - self.width()) // 2
+            y = parent_geo.y() + (parent_geo.height() - self.height()) // 2
+            self.move(x, y)
+
+    @classmethod
+    def information(cls, parent, title: str, message: str) -> bool:
+        """显示信息对话框"""
+        dialog = cls(parent, cls.INFO)
+        dialog.setWindowTitle(title)
+        dialog.setText(message)
+        dialog.addButton("确定", "primary", is_accept=True)
+        return dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted
+
+    @classmethod
+    def warning(cls, parent, title: str, message: str) -> bool:
+        """显示警告对话框"""
+        dialog = cls(parent, cls.WARNING)
+        dialog.setWindowTitle(title)
+        dialog.setText(message)
+        dialog.addButton("确定", "primary", is_accept=True)
+        return dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted
+
+    @classmethod
+    def critical(cls, parent, title: str, message: str) -> bool:
+        """显示错误对话框"""
+        dialog = cls(parent, cls.ERROR)
+        dialog.setWindowTitle(title)
+        dialog.setText(message)
+        dialog.addButton("确定", "danger", is_accept=True)
+        return dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted
+
+    @classmethod
+    def question(cls, parent, title: str, message: str) -> bool:
+        """显示询问对话框"""
+        dialog = cls(parent, cls.QUESTION)
+        dialog.setWindowTitle(title)
+        dialog.setText(message)
+        dialog.addButton("取消", "secondary", is_accept=False)
+        dialog.addButton("确定", "primary", is_accept=True)
+        return dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # 导出
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -954,4 +1195,5 @@ __all__ = [
     "IconButton",
     "ControlBar",
     "MainWindowLayout",
+    "ProtectedMessageBox",
 ]

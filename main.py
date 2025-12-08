@@ -338,6 +338,11 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         self.show_log_checkbox.setChecked(self.config_manager.get("show_log_tab", True))
         ui_card.add_widget(FormRow("日志面板", self.show_log_checkbox))
 
+        # 防截屏保护开关
+        self.capture_protection_checkbox = ModernCheckBox("启用防截屏保护")
+        self.capture_protection_checkbox.setChecked(self.config_manager.get("enable_capture_protection", True))
+        ui_card.add_widget(FormRow("防截屏", self.capture_protection_checkbox, "关闭后浮窗和截图选择器可被截图工具捕获"))
+
         page.add_widget(ui_card)
 
         # ─────────────────────────────────────────────────────────────
@@ -389,16 +394,16 @@ class AIAssistantApp(QtWidgets.QMainWindow):
 
             # Gemini Base URL
             self.gemini_base_url_edit = ModernLineEdit("API 基础 URL")
-            base_url = self.config_manager.get("gemini.base_url", DEFAULT_GEMINI_BASE_URL)
+            base_url = self.config_manager.get("gemini_base_url", "")
             self.gemini_base_url_edit.setText(base_url)
             layout.addWidget(FormRow("Base URL", self.gemini_base_url_edit))
 
             # Gemini 模型选择
             self.gemini_model_combo = ModernComboBox()
-            models = self.config_manager.get("gemini.available_models", AVAILABLE_GEMINI_MODELS)
+            models = self.config_manager.get("available_gemini_models", [])
             self.gemini_model_combo.addItems(models)
-            current_model = self.config_manager.get("gemini.model", DEFAULT_GEMINI_MODEL)
-            if current_model in models:
+            current_model = self.config_manager.get("gemini_model", "")
+            if current_model and current_model in models:
                 self.gemini_model_combo.setCurrentText(current_model)
             layout.addWidget(FormRow("模型", self.gemini_model_combo))
 
@@ -428,16 +433,16 @@ class AIAssistantApp(QtWidgets.QMainWindow):
 
             # GPT Base URL
             self.gpt_base_url_edit = ModernLineEdit("API 基础 URL")
-            base_url = self.config_manager.get("gpt.base_url", DEFAULT_GPT_BASE_URL)
+            base_url = self.config_manager.get("gpt_base_url", "")
             self.gpt_base_url_edit.setText(base_url)
             layout.addWidget(FormRow("Base URL", self.gpt_base_url_edit))
 
             # GPT 模型选择
             self.gpt_model_combo = ModernComboBox()
-            models = self.config_manager.get("gpt.available_models", AVAILABLE_GPT_MODELS)
+            models = self.config_manager.get("available_gpt_models", [])
             self.gpt_model_combo.addItems(models)
-            current_model = self.config_manager.get("gpt.model", DEFAULT_GPT_MODEL)
-            if current_model in models:
+            current_model = self.config_manager.get("gpt_model", "")
+            if current_model and current_model in models:
                 self.gpt_model_combo.setCurrentText(current_model)
             layout.addWidget(FormRow("模型", self.gpt_model_combo))
 
@@ -752,7 +757,7 @@ class AIAssistantApp(QtWidgets.QMainWindow):
                             "ai_providers.gemini.base_url",
                             "gemini_base_url",
                         ],
-                        "default": DEFAULT_GEMINI_BASE_URL,
+                        "default": "",
                     },
                     {
                         "type": "checkbox",
@@ -770,15 +775,14 @@ class AIAssistantApp(QtWidgets.QMainWindow):
                         "attr": "gemini_model_combo",
                         "label": "模型",
                         "items_paths": [
-                            "ai_providers.gemini.available_models",
                             "available_gemini_models",
                         ],
-                        "default_items": AVAILABLE_GEMINI_MODELS,
+                        "default_items": [],
                         "value_paths": [
-                            "ai_providers.gemini.model",
                             "gemini_model",
+                            "model",
                         ],
-                        "default": DEFAULT_GEMINI_MODEL,
+                        "default": "",
                     },
                 ],
             },
@@ -808,22 +812,20 @@ class AIAssistantApp(QtWidgets.QMainWindow):
                             "ai_providers.gpt.base_url",
                             "gpt_base_url",
                         ],
-                        "default": DEFAULT_GPT_BASE_URL,
+                        "default": "",
                     },
                     {
                         "type": "combo",
                         "attr": "gpt_model_combo",
                         "label": "模型",
                         "items_paths": [
-                            "ai_providers.gpt.available_models",
                             "available_gpt_models",
                         ],
-                        "default_items": AVAILABLE_GPT_MODELS,
+                        "default_items": [],
                         "value_paths": [
-                            "ai_providers.gpt.model",
                             "gpt_model",
                         ],
-                        "default": DEFAULT_GPT_MODEL,
+                        "default": "",
                     },
                     {
                         "type": "checkbox",
@@ -1036,6 +1038,17 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         self.show_log_checkbox.setChecked(self.config_manager.get("show_log_tab", True))
         helper_text = "关闭后可在状态栏按钮重新启用日志面板。"
         self._add_form_row(form, "运行日志", self.show_log_checkbox, helper_text=helper_text)
+
+        # 防截屏保护
+        self.capture_protection_checkbox = QtWidgets.QCheckBox("启用防截屏保护")
+        if self.use_fluent_theme:
+            self.capture_protection_checkbox.setMinimumHeight(30)
+        
+        # 连接信号
+        self.capture_protection_checkbox.stateChanged.connect(self.handle_capture_protection_change)
+        
+        protection_helper = "防止截图软件捕获应用界面（仅Windows有效）。"
+        self._add_form_row(form, "隐私保护", self.capture_protection_checkbox, helper_text=protection_helper)
         return card
 
     def _create_prompt_status_card(self):
@@ -1212,6 +1225,12 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         self.show_log_checkbox.setChecked(show_log)
         self.show_log_checkbox.blockSignals(False)
 
+        enable_protection = self.config_manager.get("enable_capture_protection", True)
+        if hasattr(self, 'capture_protection_checkbox'):
+            self.capture_protection_checkbox.blockSignals(True)
+            self.capture_protection_checkbox.setChecked(enable_protection)
+            self.capture_protection_checkbox.blockSignals(False)
+
     def on_provider_radio_changed(self):
         """处理单选按钮变更"""
         sender = self.sender()
@@ -1255,6 +1274,22 @@ class AIAssistantApp(QtWidgets.QMainWindow):
             self.config_manager.config["background_opacity"] = value
             self.overlay.update_background_opacity()
 
+    def handle_capture_protection_change(self, state):
+        """处理防截屏保护状态变更"""
+        enabled = (state == 2) # Qt.CheckState.Checked
+        self.config_manager.set("enable_capture_protection", enabled)
+        self.log_manager.add_log(f"防截屏保护已{'启用' if enabled else '禁用'}")
+        
+        if self.overlay:
+            # 尝试动态更新保护状态
+            if hasattr(self.overlay, 'update_capture_protection'):
+                self.overlay.update_capture_protection()
+            else:
+                # 如果没有update方法，可能需要重新应用保护
+                # 这里假设overlay有_apply_screen_capture_protection方法
+                if hasattr(self.overlay, '_apply_screen_capture_protection'):
+                    self.overlay._apply_screen_capture_protection()
+
     def _read_basic_settings(self):
         """收集界面上的基础配置值"""
         provider = None
@@ -1268,6 +1303,7 @@ class AIAssistantApp(QtWidgets.QMainWindow):
             "proxy": self.proxy_edit.text().strip(),
             "background_opacity": self.opacity_slider.value(),
             "show_log_tab": self.show_log_checkbox.isChecked(),
+            "enable_capture_protection": self.capture_protection_checkbox.isChecked(),
             "gemini": {
                 "api_key": self.gemini_api_key_edit.text().strip(),
                 "base_url": self.gemini_base_url_edit.text().strip(),
@@ -1317,6 +1353,7 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         self.config_manager.set("proxy", settings["proxy"])
         self.config_manager.set("background_opacity", settings["background_opacity"])
         self.config_manager.set("show_log_tab", settings["show_log_tab"])
+        self.config_manager.set("enable_capture_protection", settings["enable_capture_protection"])
 
         gemini = settings["gemini"]
         self.config_manager.set("api_key", gemini["api_key"])
@@ -1356,6 +1393,18 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         self.proxy_edit.editingFinished.connect(self.handle_settings_change)
         self.show_log_checkbox.toggled.connect(lambda _: self.handle_settings_change())
         self.opacity_slider.sliderReleased.connect(self.handle_settings_change)
+        self.capture_protection_checkbox.toggled.connect(self.handle_capture_protection_change)
+
+    def handle_capture_protection_change(self, checked):
+        """处理防截屏保护开关变更"""
+        if getattr(self, 'settings_loading', False):
+            return
+        # 保存设置
+        self.config_manager.set("enable_capture_protection", checked)
+        # 动态更新浮窗保护状态
+        if self.overlay:
+            self.overlay.update_capture_protection()
+        self.log_manager.add_log(f"防截屏保护已{'启用' if checked else '关闭'}")
 
     def handle_settings_change(self):
         """字段变更时处理自动保存"""
@@ -1469,7 +1518,12 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         try:
             # 创建浮窗
             if not self.overlay:
-                self.overlay = Overlay(self.config_manager)
+                try:
+                    self.overlay = Overlay(self.config_manager)
+                except Exception as overlay_error:
+                    self.log_manager.add_log(f"浮窗创建失败: {overlay_error}", "ERROR")
+                    # 尝试继续运行，但记录警告
+                    self.overlay = None
 
             # 停止旧的监听
             self.stop_listening()
@@ -1483,6 +1537,10 @@ class AIAssistantApp(QtWidgets.QMainWindow):
                 self.stop_btn.setEnabled(True)
                 self.update_status("运行中", STATUS_COLORS["running"])
                 self.log_manager.add_log("快捷键监听已启动")
+
+                # 如果浮窗创建失败，给出警告
+                if not self.overlay:
+                    self.log_manager.add_log("警告：浮窗未能创建，部分功能可能不可用", "WARNING")
 
                 # 最小化到托盘
                 self.hide()
@@ -1503,8 +1561,9 @@ class AIAssistantApp(QtWidgets.QMainWindow):
 
     def setup_hotkeys(self):
         """设置热键"""
-        # 绑定提示词发送快捷键 (统一使用alt+z)
         control_hotkeys = self.config_manager.get("hotkeys", {})
+
+        # 绑定提示词发送快捷键 (alt+z 发送当前选中的提示词)
         send_prompt_key = control_hotkeys.get("send_prompt", "alt+z")
         send_prompt_handler = lambda: threading.Thread(
             target=self.send_current_prompt, daemon=True
@@ -1513,17 +1572,25 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         if self.hotkey_handler.register_hotkey(send_prompt_key, send_prompt_handler):
             self.log_manager.add_log(f"绑定提示词发送快捷键: {send_prompt_key}")
 
-        # 绑定提示词切换快捷键 (alt+1-9)
+        # 绑定每个提示词的快捷键（按快捷键直接发送对应提示词）
         prompts = self.config_manager.get("prompts", [])
-        max_prompts = min(len(prompts), 9)  # 最多9个提示词
+        for i, prompt in enumerate(prompts):
+            hotkey_str = prompt.get('hotkey', '')
+            if not hotkey_str:
+                continue
 
-        for i in range(max_prompts):
-            hotkey_str = f"alt+{i+1}"
-            handler = lambda idx=i: self.switch_prompt(idx)
+            # 创建处理函数，直接发送该提示词
+            def make_handler(prompt_index):
+                return lambda: threading.Thread(
+                    target=lambda: self.send_prompt_by_index(prompt_index),
+                    daemon=True
+                ).start()
+
+            handler = make_handler(i)
+            prompt_name = prompt.get('name', f'提示词{i+1}')
 
             if self.hotkey_handler.register_hotkey(hotkey_str, handler):
-                prompt_name = prompts[i].get('name', f'提示词{i+1}')
-                self.log_manager.add_log(f"绑定提示词切换: {hotkey_str} -> {prompt_name}")
+                self.log_manager.add_log(f"绑定提示词: {hotkey_str} -> {prompt_name}")
 
         # 绑定控制快捷键
 
@@ -1554,12 +1621,24 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         scroll_up_key = control_hotkeys.get("scroll_up", "alt+up")
         scroll_down_key = control_hotkeys.get("scroll_down", "alt+down")
 
-        scroll_up_handler = lambda: self.overlay.scroll_up()
-        if self.hotkey_handler.register_hotkey(scroll_up_key, scroll_up_handler):
+        def safe_scroll_up():
+            try:
+                if self.overlay:
+                    self.overlay.scroll_up()
+            except Exception as e:
+                self.log_manager.add_log(f"滚动失败: {e}", "WARNING")
+
+        def safe_scroll_down():
+            try:
+                if self.overlay:
+                    self.overlay.scroll_down()
+            except Exception as e:
+                self.log_manager.add_log(f"滚动失败: {e}", "WARNING")
+
+        if self.hotkey_handler.register_hotkey(scroll_up_key, safe_scroll_up):
             self.log_manager.add_log(f"绑定向上滚动快捷键: {scroll_up_key}")
 
-        scroll_down_handler = lambda: self.overlay.scroll_down()
-        if self.hotkey_handler.register_hotkey(scroll_down_key, scroll_down_handler):
+        if self.hotkey_handler.register_hotkey(scroll_down_key, safe_scroll_down):
             self.log_manager.add_log(f"绑定向下滚动快捷键: {scroll_down_key}")
 
         # 切换服务商快捷键 - 使用信号确保线程安全
@@ -1696,9 +1775,39 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         except Exception as e:
             self.log_manager.add_log(f"发送提示词失败: {e}", "ERROR")
 
+    def send_prompt_by_index(self, index: int):
+        """通过索引发送指定的提示词（由快捷键直接触发）"""
+        try:
+            prompts = self.config_manager.get("prompts", [])
+            if not prompts:
+                self.log_manager.add_log("没有配置的提示词", "WARNING")
+                return
+
+            if 0 <= index < len(prompts):
+                prompt = prompts[index]
+                prompt_name = prompt.get('name', f'提示词{index+1}')
+                hotkey = prompt.get('hotkey', '')
+
+                self.log_manager.add_log(f"快捷键 {hotkey} -> 发送提示词: {prompt_name}")
+                self.trigger_prompt(prompt)
+
+                # 同时更新当前选中索引
+                self.current_prompt_index = index
+                self.config_manager.set("current_prompt_index", index)
+            else:
+                self.log_manager.add_log(f"提示词索引 {index} 超出范围", "WARNING")
+
+        except Exception as e:
+            self.log_manager.add_log(f"发送提示词失败: {e}", "ERROR")
+
     def handle_api_response(self, response: str):
         """在主线程中处理API响应"""
         try:
+            # 检查overlay是否存在
+            if not self.overlay:
+                self.log_manager.add_log("浮窗未初始化，无法显示响应", "WARNING")
+                return
+
             # 检查是否为错误消息
             if response.startswith("错误:"):
                 self.log_manager.add_log(response, "ERROR")
@@ -1733,7 +1842,8 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         except Exception as e:
             error_msg = f"处理API响应失败: {str(e)}"
             self.log_manager.add_log(error_msg, "ERROR")
-            self.overlay.handle_response(f"<p style='color: red;'>{error_msg}</p>")
+            if self.overlay:
+                self.overlay.handle_response(f"<p style='color: red;'>{error_msg}</p>")
 
     def clear_screenshot_history(self):
         """清空截图历史记录"""
@@ -1762,8 +1872,8 @@ class AIAssistantApp(QtWidgets.QMainWindow):
     def start_smart_screenshot(self):
         """启动智能截图选择器"""
         try:
-            # 创建截图选择器
-            self.screenshot_selector = ScreenshotSelector()
+            # 创建截图选择器（传入配置管理器以支持防截屏开关）
+            self.screenshot_selector = ScreenshotSelector(self.config_manager)
 
             # 连接信号
             self.screenshot_selector.screenshot_taken.connect(self.on_screenshot_taken)
@@ -1805,7 +1915,7 @@ class AIAssistantApp(QtWidgets.QMainWindow):
     def start_smart_screenshot_only(self):
         """启动智能截图（仅保存）"""
         try:
-            self.screenshot_selector = ScreenshotSelector()
+            self.screenshot_selector = ScreenshotSelector(self.config_manager)
             self.screenshot_selector.screenshot_taken.connect(self.on_screenshot_only_taken)
             self.screenshot_selector.screenshot_cancelled.connect(self.on_screenshot_cancelled)
             self.screenshot_selector.start_capture()
@@ -1871,7 +1981,8 @@ class AIAssistantApp(QtWidgets.QMainWindow):
 
         except Exception as e:
             self.log_manager.add_log(f"处理提示词失败: {str(e)}", "ERROR")
-            self.overlay.handle_response(f"错误: {str(e)}")
+            if self.overlay:
+                self.overlay.handle_response(f"错误: {str(e)}")
 
     def _start_async_api_request(self, all_images: list, prompt: dict, provider: str):
         """启动异步API请求"""
@@ -1888,25 +1999,49 @@ class AIAssistantApp(QtWidgets.QMainWindow):
         try:
             # 使用工厂获取 AI 服务
             service = self.ai_factory.get_service(provider)
+            if not service:
+                raise Exception(f"无法获取 {provider} 服务")
 
             # 统一调用接口
-            md = service.analyze_images(all_images, prompt['content'])
+            prompt_content = prompt.get('content', '') if isinstance(prompt, dict) else str(prompt)
+            if not prompt_content:
+                raise Exception("提示词内容为空")
 
-            # 通过信号发送结果到主线程
+            md = service.analyze_images(all_images, prompt_content)
+
+            # 通过信号发送结果到主线程（确保信号连接有效）
             if md:
-                self.api_response_signal.emit(md)
+                try:
+                    self.api_response_signal.emit(md)
+                except RuntimeError:
+                    # 信号可能在窗口关闭后失效
+                    self.log_manager.add_log("窗口已关闭，无法显示响应", "WARNING")
             else:
-                self.api_response_signal.emit("API调用失败，未获得响应")
+                try:
+                    self.api_response_signal.emit("API调用失败，未获得响应")
+                except RuntimeError:
+                    pass
 
         except Exception as e:
             # 发送错误信息到主线程
             error_msg = f"API调用异常: {str(e)}"
-            self.log_manager.add_log(error_msg, "ERROR")
-            self.api_response_signal.emit(f"错误: {error_msg}")
+            try:
+                self.log_manager.add_log(error_msg, "ERROR")
+            except Exception:
+                pass  # 日志管理器可能也已失效
+
+            try:
+                self.api_response_signal.emit(f"错误: {error_msg}")
+            except RuntimeError:
+                pass  # 信号可能在窗口关闭后失效
 
         finally:
             # 清理资源（通过信号在主线程中执行）
-            QtCore.QTimer.singleShot(0, self._cleanup_screenshot_history)
+            try:
+                QtCore.QTimer.singleShot(0, self._cleanup_screenshot_history)
+            except RuntimeError:
+                # 应用可能已退出
+                pass
 
     def _cleanup_screenshot_history(self):
         """清理截图历史记录（在主线程中执行）"""
@@ -1930,12 +2065,16 @@ class AIAssistantApp(QtWidgets.QMainWindow):
 
     def _handle_streaming_response(self, response_stream):
         """处理流式响应"""
+        full_response = ""
         try:
+            if not self.overlay:
+                self.log_manager.add_log("浮窗未初始化，无法处理流式响应", "WARNING")
+                return
+
             # 启动流式渲染
             self.overlay.start_streaming()
             self.log_manager.add_log("开始流式响应处理")
 
-            full_response = ""
             chunk_count = 0
 
             for chunk_text, is_complete in response_stream:
@@ -1945,23 +2084,29 @@ class AIAssistantApp(QtWidgets.QMainWindow):
                 if is_complete:
                     # 流式响应完成
                     self.log_manager.add_log(f"流式响应完成，总长度: {len(full_response)}字符")
-                    self.overlay.finish_streaming()
+                    if self.overlay:
+                        self.overlay.finish_streaming()
                     self._process_complete_response(full_response)
                     break
                 else:
                     # 追加内容块
                     full_response += chunk_text
                     self.log_manager.add_log(f"追加内容: {chunk_text[:50]}...")
-                    self.overlay.content_chunk.emit(chunk_text)
+                    if self.overlay:
+                        self.overlay.content_chunk.emit(chunk_text)
 
         except Exception as e:
-            self.overlay.finish_streaming()
+            if self.overlay:
+                self.overlay.finish_streaming()
             self.log_manager.add_log(f"流式响应处理失败: {e}", "ERROR")
             # 回退到传统渲染
-            if 'full_response' in locals() and full_response:
-                from markdown_it import MarkdownIt
-                html = MarkdownIt("commonmark", {"html": True}).render(full_response)
-                self.overlay.handle_response(html)
+            if full_response and self.overlay:
+                try:
+                    from markdown_it import MarkdownIt
+                    html = MarkdownIt("commonmark", {"html": True}).render(full_response)
+                    self.overlay.handle_response(html)
+                except Exception:
+                    pass
 
     def _process_complete_response(self, md_content: str):
         """处理完整响应（流式响应专用） - 注意：不再复制代码，避免重复"""

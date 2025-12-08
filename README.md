@@ -1,71 +1,84 @@
 # AI Screenshot Assistant
 
-A desktop application that captures screenshots and analyzes them using AI (Google Gemini / OpenAI GPT). Features a stealth overlay display with anti-screenshot protection.
+A desktop application that captures screenshots and analyzes them using AI (Google Gemini / OpenAI GPT). Features a stealth overlay display with **anti-screenshot protection** - perfect for quick AI-assisted problem-solving during online assessments.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![PyQt6](https://img.shields.io/badge/PyQt6-6.4+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)
 
-## Features
+[中文文档](README_CN.md) | English
+
+## 🎯 What is this?
+
+This tool helps you **instantly ask AI about anything on your screen**:
+
+- 📚 **Daily Learning**: Quickly screenshot any problem or code and get AI explanations
+- 💼 **Online Interviews/Assessments**: Get discreet AI assistance during coding tests
+- 🛡️ **Anti-Detection**: The overlay window is **invisible to screenshot tools** and screen recording software
+
+> **Key Feature**: When anti-screenshot protection is enabled, the AI response overlay cannot be captured by any screen recording or screenshot tool (Snipping Tool, ShareX, OBS, video conferencing screen share, etc.)
+
+## ✨ Features
 
 - **Multi-AI Support**: Switch between Google Gemini and OpenAI GPT
-- **Smart Screenshot**: Select screen regions or capture full screen
+- **Smart Screenshot**: Select screen regions with crosshair selector
 - **Stealth Overlay**: Semi-transparent floating window that blends with any background
-- **Anti-Screenshot Protection**: Overlay is invisible to screen capture tools (Windows)
+- **🔒 Anti-Screenshot Protection**: Overlay is invisible to screen capture tools (Windows)
 - **Global Hotkeys**: System-wide keyboard shortcuts for quick access
-- **Multiple Prompts**: Configure multiple AI prompts and switch between them
-- **Code Extraction**: Automatically extracts and copies code blocks to clipboard
+- **Multiple Prompts**: Configure multiple AI prompts with dedicated hotkeys
+- **Auto Code Extraction**: Automatically extracts and copies code blocks to clipboard
 - **Streaming Response**: Real-time display of AI responses
 
-## Screenshots
+## 📸 Screenshots
 
-> Screenshots coming soon
+### Main Interface
+![Main Settings](assets/main-settings-1.png)
 
-## Installation
+### Provider Settings
+![Provider Settings](assets/main-settings-2.png)
+
+### AI Response Overlay
+![Overlay Window](assets/overlay.png)
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.10 or higher
 - Windows 10/11 (for anti-screenshot feature)
 
-### Setup
+### Installation
 
-1. Clone the repository:
 ```bash
+# Clone the repository
 git clone https://github.com/yourusername/ai-screenshot-assistant.git
 cd ai-screenshot-assistant
-```
 
-2. Create a virtual environment (recommended):
-```bash
+# Create virtual environment (recommended)
 python -m venv venv
 venv\Scripts\activate  # Windows
-```
 
-3. Install dependencies:
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-4. Configure the application:
-```bash
+# Create configuration file
 copy model_config.example.json model_config.json
 ```
 
-5. Edit `model_config.json` and add your API keys:
-   - For Gemini: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - For GPT: Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+### Configure API Keys
 
-## Usage
+Edit `model_config.json` and add your API keys:
+- **Gemini**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **GPT**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
 
-### Start the Application
+### Run
 
 ```bash
 python main.py
 ```
 
-### Default Hotkeys
+## ⌨️ Hotkeys
 
 | Hotkey | Action |
 |--------|--------|
@@ -77,17 +90,27 @@ python main.py
 | `Alt+S` | Switch AI provider |
 | `Alt+Up/Down` | Scroll overlay content |
 
-### Configuration
+## 🛡️ Anti-Screenshot Protection
 
-The application uses `model_config.json` for all settings. You can configure:
+The overlay window uses Windows `SetWindowDisplayAffinity` API with `WDA_EXCLUDEFROMCAPTURE` flag, making it **invisible** to:
 
-- AI provider settings (API keys, models, base URLs)
-- Network proxy settings
-- UI preferences (overlay opacity, window size)
-- Custom prompts
-- Hotkey bindings
+- ✅ Windows Snipping Tool
+- ✅ ShareX, Greenshot, and other screenshot tools
+- ✅ OBS Studio and screen recording software
+- ✅ Zoom, Teams, and video conferencing screen share
+- ✅ Online proctoring software
 
-## Project Structure
+> **Note**: This feature only works on Windows 10/11 and can be toggled on/off in settings.
+
+### Stealth Design
+
+The overlay is designed to be inconspicuous:
+- High transparency (adjustable 50-255)
+- Muted text colors that blend with any background
+- No visible borders or shadows
+- Minimal, almost invisible title bar
+
+## 📁 Project Structure
 
 ```
 ai-screenshot-assistant/
@@ -95,79 +118,25 @@ ai-screenshot-assistant/
 ├── model_config.example.json  # Configuration template
 ├── requirements.txt           # Python dependencies
 ├── ai_assistant/
-│   ├── core/
-│   │   ├── config_manager.py  # Configuration management
-│   │   ├── log_manager.py     # Logging system
-│   │   └── single_instance.py # Single instance lock
-│   ├── services/
-│   │   ├── ai/                # AI service abstraction
-│   │   ├── gemini_api.py      # Gemini API client
-│   │   ├── gpt_api.py         # GPT API client
-│   │   └── network_utils.py   # Network utilities
-│   ├── ui/
-│   │   ├── overlay.py         # Stealth overlay window
-│   │   ├── styles.py          # Application styles
-│   │   ├── theme/             # Design tokens system
-│   │   └── ...                # Other UI components
-│   └── utils/
-│       ├── constants.py       # Application constants
-│       ├── hotkey_handler.py  # Global hotkey management
-│       └── screenshot.py      # Screenshot utilities
+│   ├── core/                  # Core functionality
+│   ├── services/              # AI API clients
+│   ├── ui/                    # UI components
+│   └── utils/                 # Utilities
 ```
 
-## Security Features
-
-### Anti-Screenshot Protection
-
-The overlay window uses Windows `SetWindowDisplayAffinity` API with `WDA_EXCLUDEFROMCAPTURE` flag, making it invisible to:
-- Screenshot tools (Snipping Tool, ShareX, etc.)
-- Screen recording software
-- Video conferencing screen share
-
-> **Note**: This feature only works on Windows 10/11.
-
-### Stealth Design
-
-The overlay is designed to be inconspicuous:
-- High transparency (adjustable 50-255)
-- Muted text colors
-- No visible borders or shadows
-- Minimal title bar
-
-## Development
-
-### Running Tests
-
-```bash
-python -m pytest tests/
-```
-
-### Code Style
-
-This project follows PEP 8 guidelines. Use a linter like flake8 or black for code formatting.
-
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## ⚠️ Disclaimer
 
-- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUI framework
-- [Google Generative AI](https://ai.google.dev/) - Gemini API
-- [OpenAI](https://openai.com/) - GPT API
-- [pynput](https://pynput.readthedocs.io/) - Keyboard monitoring
-- [mss](https://python-mss.readthedocs.io/) - Screen capture
+This tool is intended for personal productivity and learning purposes. Users are responsible for ensuring compliance with:
+- Your organization's policies
+- Exam/assessment rules and regulations
+- Applicable laws in your jurisdiction
 
-## Disclaimer
-
-This tool is intended for personal productivity use. Please ensure compliance with your organization's policies and applicable laws when using AI services and screen capture functionality.
+The developers are not responsible for any misuse of this software.

@@ -1,106 +1,52 @@
 {
-  "app": {
-    "name": "AIScreenshotAssistant",
-    "version": "2.0.0",
-    "config_version": "2.0.0"
-  },
-  "ai_providers": {
-    "current_provider": "Gemini",
-    "default_provider": "Gemini",
-    "available_providers": [
-      "Gemini",
-      "GPT"
-    ],
-    "gemini": {
-      "api_key": "YOUR_GEMINI_API_KEY_HERE",
-      "model": "gemini-2.5-flash",
-      "default_model": "gemini-2.5-flash",
-      "available_models": [
-        "gemini-2.5-flash",
-        "gemini-2.5-pro"
-      ],
-      "base_url": "https://generativelanguage.googleapis.com",
-      "use_proxy": false
-    },
-    "gpt": {
-      "api_key": "YOUR_OPENAI_API_KEY_HERE",
-      "model": "gpt-4o",
-      "default_model": "gpt-4o",
-      "base_url": "https://api.openai.com/v1",
-      "use_proxy": false,
-      "available_models": [
-        "gpt-4o",
-        "gpt-4o-mini",
-        "gpt-4-turbo"
-      ]
-    },
-    "common": {
-      "timeout": 30,
-      "max_retries": 3,
-      "initial_retry_delay": 2,
-      "min_api_key_length": 20
-    }
-  },
-  "network": {
-    "proxy": "http://127.0.0.1:7890",
-    "timeout": 5,
-    "supported_proxy_schemes": [
-      "http",
-      "https",
-      "socks5"
+  "config_version": "2.1.0",
+  "provider": "Gemini",
+  "gemini": {
+    "api_key": "your-gemini-api-key-here",
+    "model": "gemini-2.0-flash",
+    "base_url": "https://generativelanguage.googleapis.com",
+    "use_proxy": false,
+    "available_models": [
+      "gemini-2.0-flash",
+      "gemini-2.5-pro"
     ]
   },
-  "ui": {
-    "window": {
-      "width": 1100,
-      "height": 800,
-      "min_width": 900,
-      "min_height": 700
-    },
-    "overlay": {
-      "width": 960,
-      "height": 360,
-      "background_opacity": 120
-    },
-    "display": {
-      "show_log_tab": true
-    }
+  "gpt": {
+    "api_key": "your-openai-api-key-here",
+    "model": "gpt-4o",
+    "base_url": "https://api.openai.com/v1",
+    "use_proxy": false,
+    "available_models": [
+      "gpt-4o",
+      "gpt-4o-mini"
+    ]
   },
-  "features": {
-    "screenshot": {
-      "max_history": 10,
-      "mode": {
-        "use_selector": true,
-        "wait_time": 3000,
-        "confirm_time": 2000,
-        "minimize_focus_impact": true,
-        "backup_mode": "traditional"
-      }
+  "proxy": "http://127.0.0.1:7890",
+  "ui": {
+    "window_width": 1100,
+    "window_height": 800,
+    "window_min_width": 900,
+    "window_min_height": 700,
+    "background_opacity": 120
+  },
+  "max_screenshot_history": 10,
+  "prompts": [
+    {
+      "name": "代码实现助手",
+      "hotkey": "alt+1",
+      "content": "你是一个专业的代码实现助手。请分析截图中的内容，并提供相应的代码实现。\n要求：\n1. 提供可运行的代码，解释通过注释提供\n2. 代码逻辑以最佳性能实现"
     },
-    "logging": {
-      "max_entries": 1000,
-      "retention_days": 7,
-      "log_dir_name": ".ai_assistant",
-      "log_subdir": "logs"
-    },
-    "prompts": [
-      {
-        "name": "Code Assistant",
-        "content": "You are a professional code assistant. Please analyze the screenshot and provide the corresponding code implementation.\nRequirements:\n1. Provide runnable code with clear comments\n2. Optimize for best performance while keeping the logic simple"
-      },
-      {
-        "name": "Technical Analyst",
-        "content": "You are a technical analysis expert. Please analyze the screenshot in detail:\n1. Technical analysis\n2. Possible implementation approaches\n3. Best practice suggestions\n4. Potential issues and solutions"
-      }
-    ],
-    "current_prompt_index": 0,
-    "hotkeys": {
-      "toggle": "alt+q",
-      "screenshot_only": "alt+w",
-      "clear_screenshots": "alt+v",
-      "scroll_up": "alt+up",
-      "scroll_down": "alt+down",
-      "send_prompt": "alt+z"
+    {
+      "name": "技术分析专家",
+      "hotkey": "alt+2",
+      "content": "你是一个技术分析专家。请分析截图中的内容：\n1. 详细的技术分析\n2. 可能的实现方案\n3. 最佳实践建议"
     }
+  ],
+  "hotkeys": {
+    "toggle": "alt+q",
+    "screenshot_only": "alt+w",
+    "clear_screenshots": "alt+v",
+    "scroll_up": "alt+up",
+    "scroll_down": "alt+down"
   }
 }

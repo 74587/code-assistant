@@ -8,10 +8,11 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 
 
 class Toast(QtWidgets.QWidget):
-    def __init__(self, message: str, duration: int = 2000):
+    def __init__(self, message: str, duration: int = 2000, enable_capture_protection: bool = True):
         super().__init__()
         self.message = message
         self.duration = duration
+        self.enable_capture_protection = enable_capture_protection
         self.setup_ui()
         self.setup_window()
 
@@ -62,7 +63,7 @@ class Toast(QtWidgets.QWidget):
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
         # Windows 下防录屏设置
-        if sys.platform == "win32":
+        if sys.platform == "win32" and self.enable_capture_protection:
             try:
                 import ctypes
                 from ctypes import wintypes
@@ -97,8 +98,8 @@ class Toast(QtWidgets.QWidget):
         QtCore.QTimer.singleShot(self.duration, self.close)
 
     @staticmethod
-    def show_message(message: str, duration: int = 2000):
+    def show_message(message: str, duration: int = 2000, enable_capture_protection: bool = True):
         """静态方法，显示Toast消息"""
-        toast = Toast(message, duration)
+        toast = Toast(message, duration, enable_capture_protection)
         toast.show_toast()
         return toast

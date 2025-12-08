@@ -8,11 +8,42 @@ from mss import mss, tools
 import pyperclip
 
 
+class ScreenshotError(Exception):
+    """截图相关错误"""
+    pass
+
+
 def capture_screen() -> bytes:
-    """捕获当前屏幕截图"""
-    with mss() as sct:
-        sct_img = sct.grab(sct.monitors[1])
-        return tools.to_png(sct_img.rgb, sct_img.size)
+    """
+    捕获当前屏幕截图
+
+    Returns:
+        PNG格式的截图字节数据
+
+    Raises:
+        ScreenshotError: 截图失败时抛出
+    """
+    try:
+        with mss() as sct:
+            # 安全获取显示器 - monitors[0]是所有显示器的组合，monitors[1]是主显示器
+            if len(sct.monitors) < 2:
+                # 只有一个显示器或没有检测到，使用第一个可用的
+                monitor = sct.monitors[0]
+            else:
+                # 使用主显示器
+                monitor = sct.monitors[1]
+
+            sct_img = sct.grab(monitor)
+
+            if sct_img is None or sct_img.rgb is None:
+                raise ScreenshotError("截图数据无效")
+
+            return tools.to_png(sct_img.rgb, sct_img.size)
+
+    except ScreenshotError:
+        raise
+    except Exception as e:
+        raise ScreenshotError(f"截图失败: {e}")
 
 
 def extract_code_blocks(markdown_text: str) -> str:

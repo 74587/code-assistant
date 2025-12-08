@@ -36,13 +36,54 @@ class ConfigManager:
 
                 self._app_config = AppConfig.from_dict(data)
             else:
-                # 使用默认配置
-                self._app_config = AppConfig.get_default()
-                self.save_config()
+                # 配置文件不存在，尝试从示例文件复制
+                self._create_config_from_example()
 
+        except json.JSONDecodeError as e:
+            # JSON 解析错误 - 配置文件格式损坏
+            self._handle_config_error(f"配置文件格式错误: {e}")
         except Exception as e:
-            print(f"配置加载失败: {e}，使用默认配置")
+            # 其他错误
+            self._handle_config_error(f"配置加载失败: {e}")
+
+    def _handle_config_error(self, error_msg: str):
+        """处理配置错误"""
+        print(f"⚠️ {error_msg}")
+        print("正在使用默认配置...")
+
+        # 备份损坏的配置文件
+        if os.path.exists(self.config_file):
+            try:
+                backup_name = f"{self.config_file}.corrupted"
+                os.rename(self.config_file, backup_name)
+                print(f"已将损坏的配置备份到: {backup_name}")
+            except Exception:
+                pass
+
+        self._app_config = AppConfig.get_default()
+        self.save_config()
+        print("已创建新的默认配置文件")
+
+    def _create_config_from_example(self):
+        """从示例配置文件创建配置"""
+        example_file = "model_config.example.json"
+
+        if os.path.exists(example_file):
+            # 复制示例文件
+            import shutil
+            shutil.copy2(example_file, self.config_file)
+            print(f"已从 {example_file} 创建配置文件")
+            print("请编辑 model_config.json 填入您的 API Key")
+
+            # 加载复制的配置
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            self._app_config = AppConfig.from_dict(data)
+        else:
+            # 示例文件也不存在，使用默认配置
+            print("未找到配置文件，使用默认配置")
             self._app_config = AppConfig.get_default()
+            self.save_config()
 
     def _is_legacy_config(self, data: Dict[str, Any]) -> bool:
         """检查是否是旧版配置格式"""
@@ -136,6 +177,7 @@ class ConfigManager:
             "provider": cfg.provider,
 
             # Gemini
+            "model": cfg.gemini.model,  # 别名，用于兼容旧代码
             "gemini_model": cfg.gemini.model,
             "gemini_base_url": cfg.gemini.base_url,
             "gemini_use_proxy": cfg.gemini.use_proxy,
@@ -158,7 +200,8 @@ class ConfigManager:
             # 功能
             "max_screenshot_history": cfg.max_screenshot_history,
             "prompts": [p.to_dict() for p in cfg.prompts],
-            "hotkeys": cfg.hotkeys.to_dict()
+            "hotkeys": cfg.hotkeys.to_dict(),
+            "enable_capture_protection": cfg.ui.enable_capture_protection if hasattr(cfg.ui, 'enable_capture_protection') else True,
         }
 
     def save_config(self) -> bool:
@@ -210,6 +253,7 @@ class ConfigManager:
             "max_screenshot_history": ("max_screenshot_history", None),
             "prompts": ("prompts", None),
             "hotkeys": ("hotkeys", None),
+            "enable_capture_protection": ("ui", "enable_capture_protection"),
         }
 
         if key in key_mapping:

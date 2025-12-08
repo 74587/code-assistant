@@ -11,7 +11,6 @@ from .base import AIServiceBase, AIServiceConfig
 from ...core.log_manager import LogManager
 from ...core.config_manager import ConfigManager
 from ...utils.constants import (
-    DEFAULT_GPT_MODEL, AVAILABLE_GPT_MODELS, DEFAULT_GPT_BASE_URL,
     API_TIMEOUT, MAX_RETRIES, INITIAL_RETRY_DELAY,
     MAX_TOTAL_SIZE_MB
 )
@@ -35,7 +34,7 @@ class GPTService(AIServiceBase):
         """获取 GPT 服务配置"""
         return AIServiceConfig(
             api_key=self.config_manager.get("gpt_api_key", ""),
-            base_url=self.config_manager.get("gpt_base_url", DEFAULT_GPT_BASE_URL),
+            base_url=self.config_manager.get("gpt_base_url", ""),
             model=self._get_model(),
             use_proxy=self.config_manager.get("gpt_use_proxy", False),
             proxy_url=self.config_manager.get("proxy", ""),
@@ -46,14 +45,7 @@ class GPTService(AIServiceBase):
 
     def _get_model(self) -> str:
         """获取配置的 GPT 模型"""
-        model = self.config_manager.get("gpt_model", DEFAULT_GPT_MODEL)
-        if model not in AVAILABLE_GPT_MODELS:
-            self.log_manager.add_log(
-                f"配置的GPT模型 {model} 不在支持列表中，使用默认模型 {DEFAULT_GPT_MODEL}",
-                "WARNING"
-            )
-            return DEFAULT_GPT_MODEL
-        return model
+        return self.config_manager.get("gpt_model", "")
 
     def validate_config(self) -> Tuple[bool, str]:
         """验证配置"""
@@ -89,16 +81,27 @@ class GPTService(AIServiceBase):
         }
 
     def _get_openai_client(self):
-        """获取 OpenAI 客户端"""
+        """获取 OpenAI 客户端（带超时配置）"""
         try:
             import openai
+            from openai import Timeout
         except ImportError:
             raise Exception("需要安装openai库: pip install openai")
 
         config = self.get_service_config()
+
+        # 设置超时：连接超时10秒，读取超时120秒（大图片处理需要时间）
+        timeout = Timeout(
+            connect=10.0,
+            read=120.0,
+            write=30.0,
+            pool=10.0
+        )
+
         return openai.OpenAI(
             api_key=config.api_key,
-            base_url=config.base_url
+            base_url=config.base_url,
+            timeout=timeout
         )
 
     def analyze_single_image(self, image_data: bytes, prompt: str) -> str:

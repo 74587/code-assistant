@@ -13,7 +13,6 @@ from .base import AIServiceBase, AIServiceConfig
 from ...core.log_manager import LogManager
 from ...core.config_manager import ConfigManager
 from ...utils.constants import (
-    DEFAULT_GEMINI_MODEL, AVAILABLE_GEMINI_MODELS, DEFAULT_GEMINI_BASE_URL,
     API_TIMEOUT, MAX_RETRIES, INITIAL_RETRY_DELAY,
     MAX_IMAGE_SIZE_MB, MAX_TOTAL_SIZE_MB
 )
@@ -37,7 +36,7 @@ class GeminiService(AIServiceBase):
         """获取 Gemini 服务配置"""
         return AIServiceConfig(
             api_key=self.config_manager.get("api_key", ""),
-            base_url=self.config_manager.get("gemini_base_url", DEFAULT_GEMINI_BASE_URL),
+            base_url=self.config_manager.get("gemini_base_url", ""),
             model=self._get_model(),
             use_proxy=self.config_manager.get("gemini_use_proxy", False),
             proxy_url=self.config_manager.get("proxy", ""),
@@ -48,14 +47,7 @@ class GeminiService(AIServiceBase):
 
     def _get_model(self) -> str:
         """获取配置的模型"""
-        model = self.config_manager.get("model", DEFAULT_GEMINI_MODEL)
-        if model not in AVAILABLE_GEMINI_MODELS:
-            self.log_manager.add_log(
-                f"配置的模型 {model} 不在支持列表中，使用默认模型 {DEFAULT_GEMINI_MODEL}",
-                "WARNING"
-            )
-            return DEFAULT_GEMINI_MODEL
-        return model
+        return self.config_manager.get("model", "")
 
     def validate_config(self) -> Tuple[bool, str]:
         """验证配置"""

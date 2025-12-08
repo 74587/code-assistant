@@ -33,31 +33,10 @@ SHOW_LOG_TAB = True  # 是否显示日志选项卡
 AVAILABLE_PROVIDERS = ["Gemini", "GPT"]
 DEFAULT_PROVIDER = "Gemini"
 
-# Gemini API配置
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
-AVAILABLE_GEMINI_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.5-pro"
-]
-
-DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com"
-# GPT API配置
-DEFAULT_GPT_MODEL = "gpt-4o"
-AVAILABLE_GPT_MODELS = [
-    "gpt-4o",
-    "gpt-4o-mini",
-    "gpt-4-turbo"
-]
-DEFAULT_GPT_BASE_URL = "https://api.openai.com/v1"
-
-# 通用API配置
+# 通用API配置（这些是程序运行参数，非模型配置）
 API_TIMEOUT = 30
 MAX_RETRIES = 3
 INITIAL_RETRY_DELAY = 2
-
-# 兼容性保持
-DEFAULT_MODEL = DEFAULT_GEMINI_MODEL
-AVAILABLE_MODELS = AVAILABLE_GEMINI_MODELS
 
 # 网络配置
 NETWORK_TIMEOUT = 5
@@ -111,4 +90,8 @@ SCREENSHOT_MODE = {
     "minimize_focus_impact": True,  # 是否最小化焦点影响
     "backup_mode": "traditional"    # 备选模式: "traditional" 或 "instant"
 }
+
+# 防截屏保护配置
+# 启用后，浮窗和截图选择器将无法被截图工具捕获
+ENABLE_CAPTURE_PROTECTION = True
 

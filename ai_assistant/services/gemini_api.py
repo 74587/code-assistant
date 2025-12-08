@@ -14,7 +14,7 @@ from ..core.log_manager import LogManager
 from ..core.config_manager import ConfigManager
 from .network_utils import NetworkUtils
 from ..utils.constants import (
-    DEFAULT_MODEL, AVAILABLE_MODELS, API_TIMEOUT, MAX_RETRIES, INITIAL_RETRY_DELAY,
+    API_TIMEOUT, MAX_RETRIES, INITIAL_RETRY_DELAY,
     MAX_IMAGE_SIZE_MB, MAX_TOTAL_SIZE_MB, MAX_THUMBNAIL_SIZE
 )
 
@@ -42,11 +42,8 @@ class GeminiAPI:
 
     def _get_model(self) -> str:
         """获取配置的模型"""
-        model = self.config_manager.get("model", DEFAULT_MODEL)
-        if model not in AVAILABLE_MODELS:
-            self.log_manager.add_log(f"⚠️ 配置的模型 {model} 不在支持列表中，使用默认模型 {DEFAULT_MODEL}", "WARNING")
-            return DEFAULT_MODEL
-        return model
+        # 不验证模型列表，因为用户可能使用自定义API端点
+        return self.config_manager.get("model", "")
 
     def _validate_api_key(self) -> str:
         """验证API Key"""

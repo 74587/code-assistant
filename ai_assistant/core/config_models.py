@@ -128,6 +128,7 @@ class UIConfig:
     window_min_width: int = 500
     window_min_height: int = 700
     background_opacity: int = 120
+    enable_capture_protection: bool = True  # 防截屏保护开关
 
     def __post_init__(self):
         # 验证范围
@@ -135,13 +136,14 @@ class UIConfig:
         self.window_height = max(self.window_min_height, self.window_height)
         self.background_opacity = max(0, min(255, self.background_opacity))
 
-    def to_dict(self) -> Dict[str, int]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "window_width": self.window_width,
             "window_height": self.window_height,
             "window_min_width": self.window_min_width,
             "window_min_height": self.window_min_height,
-            "background_opacity": self.background_opacity
+            "background_opacity": self.background_opacity,
+            "enable_capture_protection": self.enable_capture_protection,
         }
 
     @classmethod
@@ -151,7 +153,8 @@ class UIConfig:
             window_height=data.get("window_height", 800),
             window_min_width=data.get("window_min_width", 500),
             window_min_height=data.get("window_min_height", 700),
-            background_opacity=data.get("background_opacity", 120)
+            background_opacity=data.get("background_opacity", 120),
+            enable_capture_protection=data.get("enable_capture_protection", True),
         )
 
 

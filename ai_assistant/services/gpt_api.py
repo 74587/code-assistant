@@ -10,7 +10,6 @@ from typing import List, Optional, Generator, Tuple
 from ..core.log_manager import LogManager
 from ..core.config_manager import ConfigManager
 from ..utils.constants import (
-    DEFAULT_GPT_MODEL, AVAILABLE_GPT_MODELS, DEFAULT_GPT_BASE_URL,
     API_TIMEOUT, MAX_RETRIES, INITIAL_RETRY_DELAY,
     MAX_IMAGE_SIZE_MB, MAX_TOTAL_SIZE_MB, MAX_THUMBNAIL_SIZE
 )
@@ -40,15 +39,12 @@ class GPTAPI:
 
     def _get_model(self) -> str:
         """获取配置的GPT模型"""
-        model = self.config_manager.get("gpt_model", DEFAULT_GPT_MODEL)
-        if model not in AVAILABLE_GPT_MODELS:
-            self.log_manager.add_log(f"⚠️ 配置的GPT模型 {model} 不在支持列表中，使用默认模型 {DEFAULT_GPT_MODEL}", "WARNING")
-            return DEFAULT_GPT_MODEL
-        return model
+        # 不再验证模型是否在支持列表中，因为用户可能使用自定义API端点
+        return self.config_manager.get("gpt_model", "")
 
     def _get_base_url(self) -> str:
         """获取配置的Base URL"""
-        return self.config_manager.get("gpt_base_url", DEFAULT_GPT_BASE_URL)
+        return self.config_manager.get("gpt_base_url", "")
 
     def _validate_api_key(self) -> str:
         """验证GPT API Key"""

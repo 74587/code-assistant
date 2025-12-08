@@ -18,8 +18,9 @@ class ScreenshotSelector(QtWidgets.QWidget):
     screenshot_taken = QtCore.pyqtSignal(bytes)  # 截图完成信号
     screenshot_cancelled = QtCore.pyqtSignal()  # 取消截图信号
 
-    def __init__(self):
+    def __init__(self, config_manager=None):
         super().__init__()
+        self.config_manager = config_manager  # 配置管理器
         self.start_pos = None  # 鼠标按下位置
         self.end_pos = None    # 鼠标当前位置
         self.is_selecting = False  # 是否正在选择
@@ -93,11 +94,17 @@ class ScreenshotSelector(QtWidgets.QWidget):
         self.showFullScreen()
 
         # 录屏排除 - 防止截图选择器出现在屏幕录制中
-        try:
-            ctypes.windll.user32.SetWindowDisplayAffinity(
-                int(self.winId()), 0x11)  # WDA_EXCLUDEFROMCAPTURE
-        except Exception:
-            pass
+        # 检查配置是否启用防截屏保护
+        enable_protection = True
+        if self.config_manager:
+            enable_protection = self.config_manager.get("enable_capture_protection", True)
+        
+        if enable_protection:
+            try:
+                ctypes.windll.user32.SetWindowDisplayAffinity(
+                    int(self.winId()), 0x11)  # WDA_EXCLUDEFROMCAPTURE
+            except Exception:
+                pass
 
         # 启动3秒等待计时器
         self.wait_timer = QtCore.QTimer()
