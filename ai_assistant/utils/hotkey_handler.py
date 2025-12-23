@@ -233,6 +233,8 @@ class HotkeyHandler:
                 on_press=self.on_key_press,
                 on_release=self.on_key_release
             )
+            # 设置为守护线程,确保程序退出时线程自动终止
+            self.keyboard_listener.daemon = True
             self.keyboard_listener.start()
             return True
         except Exception as e:
