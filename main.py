@@ -6,6 +6,7 @@ AI Screenshot Assistant - 重构版本
 
 import sys
 import os
+import signal
 import threading
 import gc
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -1233,22 +1234,39 @@ class AIAssistantApp(QtWidgets.QMainWindow):
 
     def on_provider_radio_changed(self):
         """处理单选按钮变更"""
-        sender = self.sender()
-        if sender.isChecked():
-            provider = sender.text()
-            # 自动保存提供商选择
-            self.config_manager.set("provider", provider)
-            self.log_manager.add_log(f"✅ AI服务商已切换为: {provider}")
-            self.on_provider_changed(provider)
-            self.handle_settings_change()
+        try:
+            sender = self.sender()
+            if sender.isChecked():
+                provider = sender.text()
+                # 自动保存提供商选择
+                self.config_manager.set("provider", provider)
+                self.log_manager.add_log(f"✅ AI服务商已切换为: {provider}")
+                self.on_provider_changed(provider)
+                self.handle_settings_change()
+        except Exception as e:
+            self.log_manager.add_log(f"❌ 切换服务商时出错: {str(e)}")
+            import traceback
+            traceback.print_exc()
 
     # 注意：toggle_provider方法已移动到handle_toggle_provider，使用信号机制
 
     def on_provider_changed(self, provider: str):
         """处理提供商变更"""
-        if hasattr(self, "provider_stack"):
-            target_widget = self.provider_widget_map.get(provider, self.gemini_group)
-            self.provider_stack.setCurrentWidget(target_widget)
+        try:
+            if hasattr(self, "provider_stack") and self.provider_stack is not None:
+                target_widget = self.provider_widget_map.get(provider)
+                if target_widget is None:
+                    self.log_manager.add_log(f"⚠️ 未找到提供商 '{provider}' 对应的配置面板,可用的提供商: {list(self.provider_widget_map.keys())}")
+                    # 使用第一个可用的面板作为默认值
+                    if self.provider_widget_map:
+                        target_widget = list(self.provider_widget_map.values())[0]
+                    else:
+                        return
+                self.provider_stack.setCurrentWidget(target_widget)
+        except Exception as e:
+            self.log_manager.add_log(f"❌ 切换提供商面板时出错: {str(e)}")
+            import traceback
+            traceback.print_exc()
     def toggle_gemini_api_visibility(self):
         """切换 Gemini API Key 显示/隐藏"""
         if self.gemini_api_key_edit.echoMode() == QtWidgets.QLineEdit.EchoMode.Password:
@@ -1292,32 +1310,47 @@ class AIAssistantApp(QtWidgets.QMainWindow):
 
     def _read_basic_settings(self):
         """收集界面上的基础配置值"""
-        provider = None
-        for provider_name, radio in self.provider_radios.items():
-            if radio.isChecked():
-                provider = provider_name
-                break
+        try:
+            provider = None
+            for provider_name, radio in self.provider_radios.items():
+                if radio.isChecked():
+                    provider = provider_name
+                    break
 
-        settings = {
-            "provider": provider,
-            "proxy": self.proxy_edit.text().strip(),
-            "background_opacity": self.opacity_slider.value(),
-            "show_log_tab": self.show_log_checkbox.isChecked(),
-            "enable_capture_protection": self.capture_protection_checkbox.isChecked(),
-            "gemini": {
-                "api_key": self.gemini_api_key_edit.text().strip(),
-                "base_url": self.gemini_base_url_edit.text().strip(),
-                "use_proxy": self.gemini_use_proxy_check.isChecked(),
-                "model": self.gemini_model_combo.currentText(),
-            },
-            "gpt": {
-                "api_key": self.gpt_api_key_edit.text().strip(),
-                "base_url": self.gpt_base_url_edit.text().strip(),
-                "use_proxy": self.gpt_use_proxy_check.isChecked(),
-                "model": self.gpt_model_combo.currentText(),
-            },
-        }
-        return settings
+            settings = {
+                "provider": provider,
+                "proxy": self.proxy_edit.text().strip() if hasattr(self, 'proxy_edit') else "",
+                "background_opacity": self.opacity_slider.value() if hasattr(self, 'opacity_slider') else 180,
+                "show_log_tab": self.show_log_checkbox.isChecked() if hasattr(self, 'show_log_checkbox') else False,
+                "enable_capture_protection": self.capture_protection_checkbox.isChecked() if hasattr(self, 'capture_protection_checkbox') else True,
+                "gemini": {
+                    "api_key": self.gemini_api_key_edit.text().strip() if hasattr(self, 'gemini_api_key_edit') else "",
+                    "base_url": self.gemini_base_url_edit.text().strip() if hasattr(self, 'gemini_base_url_edit') else "",
+                    "use_proxy": self.gemini_use_proxy_check.isChecked() if hasattr(self, 'gemini_use_proxy_check') else False,
+                    "model": self.gemini_model_combo.currentText().strip() if hasattr(self, 'gemini_model_combo') else "",
+                },
+                "gpt": {
+                    "api_key": self.gpt_api_key_edit.text().strip() if hasattr(self, 'gpt_api_key_edit') else "",
+                    "base_url": self.gpt_base_url_edit.text().strip() if hasattr(self, 'gpt_base_url_edit') else "",
+                    "use_proxy": self.gpt_use_proxy_check.isChecked() if hasattr(self, 'gpt_use_proxy_check') else False,
+                    "model": self.gpt_model_combo.currentText().strip() if hasattr(self, 'gpt_model_combo') else "",
+                },
+            }
+            return settings
+        except Exception as e:
+            self.log_manager.add_log(f"❌ 读取基础设置时出错: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            # 返回默认设置
+            return {
+                "provider": None,
+                "proxy": "",
+                "background_opacity": 180,
+                "show_log_tab": False,
+                "enable_capture_protection": True,
+                "gemini": {"api_key": "", "base_url": "", "use_proxy": False, "model": ""},
+                "gpt": {"api_key": "", "base_url": "", "use_proxy": False, "model": ""},
+            }
 
     def _validate_basic_settings(self, settings):
         """校验基础配置，返回 (是否通过, 提示标题, 提示内容)"""
@@ -2161,6 +2194,15 @@ class AIAssistantApp(QtWidgets.QMainWindow):
 # ──────────────────────── 主程序入口 ──────────────────────── #
 def main():
     """主程序入口"""
+    # 设置信号处理器以支持 Ctrl+C 退出
+    def signal_handler(_signum, _frame):
+        """处理 SIGINT 信号 (Ctrl+C)"""
+        print("\n接收到退出信号,正在关闭程序...")
+        QtWidgets.QApplication.quit()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+
     # 启用高DPI支持 (PyQt6自动支持高DPI，但可以设置一些选项)
     try:
         # PyQt6 会自动处理高DPI，这里设置舍入策略
@@ -2196,6 +2238,12 @@ def main():
         sys.exit(1)
 
     app = QtWidgets.QApplication(sys.argv)
+
+    # 添加定时器以允许 Python 处理信号
+    # 这确保了 Ctrl+C 等信号能够被及时处理
+    timer = QtCore.QTimer()
+    timer.start(500)  # 每500ms触发一次
+    timer.timeout.connect(lambda: None)  # 空操作,但允许信号处理
 
     # 检查系统托盘支持
     if not QtWidgets.QSystemTrayIcon.isSystemTrayAvailable():
